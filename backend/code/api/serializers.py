@@ -3,16 +3,16 @@ from rest_framework import serializers # pyright: ignore[reportMissingImports, r
 from .services.inventory_services import InventoryServices
 
 #   MODELS
-from test1.models import Report
-from test1.models import HR_records
-from test1.models import Customer_records
-from test1.models import Operation
-from test1.models import Inventory
-from test1.models import Inv_masterdata
-from test1.models import MeasureUnit
-from test1.models import Machinery_records
-from test1.models import UsedMaterials
-from test1.models import Logs
+from .models import Report
+from .models import HR_records
+from .models import Customer_records
+from .models import Operation
+from .models import Inventory
+from .models import Inv_masterdata
+from .models import MeasureUnit
+from .models import Machinery_records
+from .models import UsedMaterials
+from .models import Logs
 
 class LogsSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:

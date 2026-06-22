@@ -7,7 +7,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('test1', '0015_remove_inv_masterdata_weight'),
+        ('api', '0015_remove_inv_masterdata_weight'),
     ]
 
     operations = [
@@ -16,8 +16,8 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('qta', models.DecimalField(decimal_places=2, max_digits=10, verbose_name='qta')),
-                ('inventory_fk', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to='test1.inventory')),
-                ('operation_fk', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to='test1.operation')),
+                ('inventory_fk', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to='api.inventory')),
+                ('operation_fk', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to='api.operation')),
             ],
         ),
     ]

@@ -1,0 +1,31 @@
+services:
+  db:
+    image: postgres:15
+    environment:
+      - POSTGRES_DB=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    ports:
+      - "54320:5432"
+    volumes:
+      # Mappa il volume nominato alla cartella dati di Postgres
+      - postgres_data:/var/lib/postgresql/data
+
+  backend:
+    build: ./backend
+    command: python3 manage.py runserver 0.0.0.0:8000
+    volumes:
+      - ./backend/code:/code
+    ports:
+      - "8000:8000"
+    environment:
+      - DB_NAME=postgres
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - DB_HOST=db  # Deve corrispondere al nome del servizio sopra
+      - DB_PORT=5432
+    depends_on:
+      - db
+
+volumes:
+  postgres_data:

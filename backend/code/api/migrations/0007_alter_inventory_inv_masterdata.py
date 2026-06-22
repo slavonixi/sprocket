@@ -7,13 +7,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('test1', '0006_remove_inv_masterdata_measure'),
+        ('api', '0006_remove_inv_masterdata_measure'),
     ]
 
     operations = [
         migrations.AlterField(
             model_name='inventory',
             name='inv_masterdata',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to='test1.inv_masterdata', unique=True),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to='api.inv_masterdata', unique=True),
         ),
     ]

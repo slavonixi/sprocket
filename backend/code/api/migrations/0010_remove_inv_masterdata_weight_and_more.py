@@ -6,7 +6,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('test1', '0009_inv_masterdata_weight'),
+        ('api', '0009_inv_masterdata_weight'),
     ]
 
     operations = [

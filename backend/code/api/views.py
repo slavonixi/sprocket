@@ -1,23 +1,23 @@
-from test1 import serializers, models
+from . import serializers, models
 from rest_framework import generics
 from django.contrib.auth.models import User
-from test1.serializers import ReportSerializerList
-from test1.serializers import ReportSerializerDetail
-from test1.serializers import HR_recordsSerializer
-from test1.serializers import Customer_recordsSerializer
-from test1.serializers import OperationSerializerList
-from test1.serializers import OperationSerializerDetail
-from test1.serializers import InventorySerializerList
-from test1.serializers import InventorySerializerDetail
-from test1.serializers import Inv_masterdataSerializer
-from test1.serializers import MeasureUnitSerializer
-from test1.serializers import Machinery_recordsSerializer
-from test1.serializers import UsedMaterialsSerializer
-from test1.serializers import LogsSerializer
+from .serializers import ReportSerializerList
+from .serializers import ReportSerializerDetail
+from .serializers import HR_recordsSerializer
+from .serializers import Customer_recordsSerializer
+from .serializers import OperationSerializerList
+from .serializers import OperationSerializerDetail
+from .serializers import InventorySerializerList
+from .serializers import InventorySerializerDetail
+from .serializers import Inv_masterdataSerializer
+from .serializers import MeasureUnitSerializer
+from .serializers import Machinery_recordsSerializer
+from .serializers import UsedMaterialsSerializer
+from .serializers import LogsSerializer
 
 
 from rest_framework import permissions
-from test1.permissions import IsOwnerOrReadOnly
+from .permissions import IsOwnerOrReadOnly
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.reverse import reverse

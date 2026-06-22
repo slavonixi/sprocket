@@ -32,7 +32,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
-    'test1.apps.Test1Config',
+    'api.apps.ApiConfig',
     'rest_framework',
     'django.contrib.admin',
     'django.contrib.auth',

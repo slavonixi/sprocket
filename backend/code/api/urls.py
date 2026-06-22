@@ -1,8 +1,8 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from test1 import views
 from . import views
-# Create a router and register our ViewSets with it.
+from . import views
+# Create a router and register our Viewets with it.
 router = DefaultRouter()
 router.register(r"report", views.ReportViewSet, basename="report")
 router.register(r"hr_records", views.HR_recordsViewSet, basename="hr_records")
