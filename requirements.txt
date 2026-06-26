@@ -1,0 +1,9 @@
+django
+djangorestframework
+psycopg2-binary
+Faker
+requests
+celery
+redis
+django-celery-results
+structlog
