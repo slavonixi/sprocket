@@ -1,6 +1,6 @@
 from django.contrib.auth.models import User # pyright: ignore[reportMissingModuleSource]
 from rest_framework import serializers # pyright: ignore[reportMissingImports, reportMissingModuleSource]
-from .services.inventory_services import InventoryServices
+from .inventory_services import InventoryServices
 
 #   MODELS
 from .models import Report
@@ -251,7 +251,7 @@ class Customer_recordsSerializer(serializers.HyperlinkedModelSerializer):
 class HR_recordsSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
-        
+        model = HR_records
         fields = [
             "url",
             "name",

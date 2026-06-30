@@ -24,7 +24,7 @@ from rest_framework.reverse import reverse
 from rest_framework import renderers
 from rest_framework import viewsets
 from rest_framework.decorators import action
-from .services.app_services import ServiceOrchestrator
+from services.app_services import ServiceOrchestrator
 from rest_framework import status
 from django.db import transaction
 from django.http import HttpResponse

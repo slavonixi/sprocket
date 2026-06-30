@@ -94,7 +94,7 @@ class InventoryServices:
         """Check if the new value of a pre-existing item is valid
         
             It is different from validate_item(), since this method is built for 
-            real items
+            already existing items
         """
         InventoryServices.check_zero_or_negative(qta) 
         #check if decimal values are accepted for this item
