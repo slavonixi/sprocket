@@ -143,7 +143,7 @@ class Inv_masterdata(models.Model):
     )
 
     measure_value = models.DecimalField(
-       max_digits=10, 
+       max_digits=10,
        decimal_places=2,
        verbose_name=_("measure_value"),
         null=True,
@@ -177,7 +177,7 @@ class Inventory(models.Model):
     #Service methods
     
     def get_unit_measure(self):
-        return self.inv_masterdata.measureUnit.symbol
+        return self.inv_masterdata.measureUnit
     
     def get_sku(self):
         return self.inv_masterdata.sku

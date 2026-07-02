@@ -1,6 +1,7 @@
 from django.contrib.auth.models import User # pyright: ignore[reportMissingModuleSource]
 from rest_framework import serializers # pyright: ignore[reportMissingImports, reportMissingModuleSource]
 from .inventory_services import InventoryServices
+from services.app_services import ServiceOrchestrator
 
 #   MODELS
 from .models import Report
@@ -54,13 +55,14 @@ class UsedMaterialsSerializer(serializers.HyperlinkedModelSerializer):
             old_qta = self.instance.qta
             new_qta = data.get('qta')
             inventory_item = data.get('inventory_fk')
-            InventoryServices.validate_stock_update(inventory_item, old_qta, new_qta)     
+            ServiceOrchestrator.validate_withdraw_update(inventory_item, old_qta, new_qta)     
 
         else:
             # Siamo in un CREATE (POST)
             inventory_item = data.get('inventory_fk')
             qta = data.get('qta')
-            InventoryServices.validate_stock_reduction(inventory_item, qta)        
+            
+            ServiceOrchestrator.validate_inventory_withdraw(inventory_item, qta)        
         return data
      
 class Machinery_recordsSerializer(serializers.HyperlinkedModelSerializer):
