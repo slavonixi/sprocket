@@ -184,16 +184,28 @@ class Inventory(models.Model):
      
     def is_allowed_decimal_value(self):
         return self.inv_masterdata.measureUnit.is_decimal
+
+#                   **************************************************************
+#   MOVEMENT register every operation in the Inventory
+#
+#
+
+class Movement(models.Model):
+    inventory_id = models.ForeignKey(Inventory, on_delete=models.PROTECT)
+    quantity = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        verbose_name=_("quantity"),
+    )
+
+    def get_inventory_item(self):
+        return self.inventory_id
     
 #                   **************************************************************
-
-#   USED MATERIALS define what materials are used for an operation, and
-
-#   relative quantities
-
+#   USED MATERIALS show what and how much material was used for an operation
+#   
 #
 
-#
 
 class UsedMaterials(models.Model):
 
