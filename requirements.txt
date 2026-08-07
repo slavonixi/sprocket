@@ -7,3 +7,5 @@ celery
 redis
 django-celery-results
 structlog
+pytest
+pytest-django

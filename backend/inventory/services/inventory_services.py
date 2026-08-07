@@ -1,10 +1,10 @@
 from api import exceptions
 from django.db import transaction
-from api.models import Inventory
-from api.models import Inv_masterdata
-from api.models import MeasureUnit
+from inventory.models import Inventory
+from inventory.models import Inv_masterdata
+from inventory.models import MeasureUnit
 import logging
-from rest_framework.exceptions import APIException
+from rest_framework.exceptions import APIException # pyright: ignore
 
 logger = logging.getLogger('django')
 

@@ -35,9 +35,10 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
-    'django_celery_results',
     'api.apps.ApiConfig',
+    'inventory.apps.InventoryConfig',
     'rest_framework',
+    'django_celery_results',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',

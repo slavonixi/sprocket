@@ -7,35 +7,28 @@ from .serializers import HR_recordsSerializer
 from .serializers import Customer_recordsSerializer
 from .serializers import OperationSerializerList
 from .serializers import OperationSerializerDetail
-from .serializers import InventorySerializerList
-from .serializers import InventorySerializerDetail
-from .serializers import Inv_masterdataSerializer
-from .serializers import MeasureUnitSerializer
 from .serializers import Machinery_recordsSerializer
 from .serializers import UsedMaterialsSerializer
 from .serializers import LogsSerializer
 
+from core.permissions import IsOwnerOrReadOnly
 
 from rest_framework import permissions
-from .permissions import IsOwnerOrReadOnly
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.reverse import reverse
 from rest_framework import renderers
 from rest_framework import viewsets
 from rest_framework.decorators import action
-from services.app_services import ServiceOrchestrator
 from rest_framework import status
 from django.db import transaction
 from django.http import HttpResponse
-import logging
-logger = logging.getLogger('django')
-
-
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework import permissions, status
-from .models import Logs
+
+from services.app_services import ServiceOrchestrator
+
 
 @api_view(['POST'])
 @permission_classes([permissions.AllowAny]) # In produzione usa IsAuthenticated
@@ -64,19 +57,6 @@ class Machinery_recordsViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
     
 
-class MeasureUnitViewSet(viewsets.ModelViewSet):
-
-    serializer_class = MeasureUnitSerializer
-    queryset = models.MeasureUnit.objects.all()
-    permission_classes = [permissions.IsAuthenticated]
-    
-
-class MasterdataViewSet(viewsets.ModelViewSet):
-
-    serializer_class = Inv_masterdataSerializer
-    queryset = models.Inv_masterdata.objects.all()
-    permission_classes = [permissions.IsAuthenticated]
-    
 class UsedMaterialsViewSet(viewsets.ModelViewSet):
 
     serializer_class = UsedMaterialsSerializer
@@ -103,21 +83,6 @@ class UsedMaterialsViewSet(viewsets.ModelViewSet):
         inventory_id = instance.inventory.fk.id
         ServiceOrchestrator.delete_withdraw(quantity_to_restore)
         instance.delete()
-
-
-
-class InventoryViewSet(viewsets.ModelViewSet):
-    """
-    This viewset automatically provides `list` and `retrieve` actions.
-    """
-    
-    def get_serializer_class(self):
-         if self.action == 'list':
-            return InventorySerializerList
-         return InventorySerializerDetail
-    
-    queryset = models.Inventory.objects.all()
-    permission_classes = [permissions.IsAuthenticated]
 
 
 
