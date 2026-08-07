@@ -9,3 +9,4 @@ django-celery-results
 structlog
 pytest
 pytest-django
+django-extensions

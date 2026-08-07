@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'api.apps.ApiConfig',
     'inventory.apps.InventoryConfig',
     'rest_framework',
+    'django_extensions',
     'django_celery_results',
     'django.contrib.admin',
     'django.contrib.auth',
