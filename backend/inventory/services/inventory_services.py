@@ -83,6 +83,11 @@ class InventoryServices:
     #  | VALIDATION METHODS |
 
     @staticmethod
+    def get_delta(old_qty, new_qty):
+        delta = old_qty - new_qty
+        return delta
+    
+    @staticmethod
     def compare_qty(qty1, qty2):
         if qty1 == qty2:
             raise exceptions.NoChangeDetectedInUpdate(qty1)
@@ -99,7 +104,7 @@ class InventoryServices:
         InventoryServices.check_decimal(inventory_item)
 
     @staticmethod
-    def check_zero_or_negative(qta):
+    def check_zero_or_negative(qty):
         """check if the value is zero or negative, raise
            a NegativeOrZeroError exception.
 
@@ -107,8 +112,8 @@ class InventoryServices:
            Zero values are forbidden in every operation.
         
         """
-        if qta <= 0:
-            raise exceptions.NegativeOrZeroError(qta)
+        if qty <= 0:
+            raise exceptions.NegativeOrZeroError(qty)
 
 
     @staticmethod
@@ -142,17 +147,17 @@ class InventoryServices:
         return True
     
     @staticmethod
-    def validate_stock_value(inventory_item, qta):
+    def validate_stock_value(inventory_item, qty):
         """Check if the new value of a pre-existing item is valid
         
             It is different from validate_item(), since this method is built for 
             already existing items
         """
         try:    
-            #qta must be > 0
-            InventoryServices.check_zero_or_negative(qta) 
+            #qty must be > 0
+            InventoryServices.check_zero_or_negative(qty) 
             #check if decimal values are accepted for this item
-            InventoryServices.check_decimal(inventory_item, qta)
+            InventoryServices.check_decimal(inventory_item, qty)
         except APIException as e:
             raise e
         return True
@@ -210,27 +215,39 @@ class InventoryServices:
     #  | SERVICE METHODS |
     #  | SERVICE METHODS |
 
-    
     @staticmethod
-    def apply_to_stock(inventory_id, qta): 
+    def create_stock(inventory_item):
+        inventory_item.save()
+        return inventory_item
+
+    @staticmethod
+    def add_value_to_stock(inventory_id, qty): 
         """
-        add the qta value of an inventory element. It performs an 
+        add the qty value of an inventory element. It performs a stock
         availability check to avoid 'critical race' issues.
             
         """
         with transaction.atomic():
             inventory_item = Inventory.objects.select_for_update().get(id=inventory_id)
-            if qta < 0: #if true -> withdraw | if false -> restore
+            if qty < 0: #if true -> withdraw | if false -> restore
                 try:
-                    InventoryServices.is_sufficient(inventory_item, -qta)
+                    InventoryServices.is_sufficient(inventory_item, -qty)
                 except exceptions.InsufficientStockError as e:
                     raise e
-            inventory_item.quantity += qta 
+            inventory_item.quantity += qty 
             inventory_item.save()
             result = InventoryServices.create_return_response(
-                operation = "InventoryServices.apply_to_stock",
-                withdrawed_qty = qta,
+                operation = "InventoryServices.add_value_to_stock",
+                withdrawed_qty = qty,
                 item = inventory_item,
             )
             return result
-  
+
+    def update_stock_value(inventory_id, old_qty, new_qty):
+        delta = InventoryServices.get_delta(old_qty, new_qty)
+        result = InventoryServices.add_value_to_stock(inventory_id, delta)
+        return result
+
+    def delete_stock(inventory_item):
+        inventory_item.delete()
+        return True

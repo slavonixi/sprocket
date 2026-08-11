@@ -4,7 +4,7 @@ from inventory.models import Movement
 from rest_framework.exceptions import APIException # pyright: ignore
 
 
-class Movement_services:
+class MovementServices:
 
     @staticmethod
     def create_movement(movement_item):
