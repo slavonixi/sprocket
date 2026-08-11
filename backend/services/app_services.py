@@ -1,4 +1,4 @@
-from api.inventory_services import InventoryServices
+from inventory.services.inventory_services import InventoryServices
 from api import exceptions
 from django.db import transaction
 from api import tasks

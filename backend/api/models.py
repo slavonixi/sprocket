@@ -2,33 +2,21 @@ from django.db import models
 from django.utils.translation import gettext_lazy as _
 from django.core.validators import RegexValidator
 import uuid
+import inventory
 # """
 # #                   **************************************************************
 # #   EAN13Field is a custom Field for EAN13 standard barcode.
 # #   It performs some check-up and, eventually, throws an error message
 # #
 # """
-class EAN13Field(models.CharField):
-    def __init__(self, *args, **kwargs):
-        kwargs['max_length'] = 13
-        super().__init__(*args, **kwargs)
-        self.validators.append(RegexValidator(
-            regex=r'^[0-9]{13}$',
-            message=_("Il barcode deve essere di 13 cifre.")
-        ))
+
 # """
 # #                   **************************************************************
 # #   MeasureUnit is a table that contains all standards measure unit
 # #
 # #
 # """
-class MeasureUnit(models.Model):
-    name = models.CharField(max_length=20, unique=True) # Es: Kilogrammo
-    symbol = models.CharField(max_length=5, unique=True) # Es: kg
-    is_decimal = models.BooleanField(default=False) # Se False, non permetti 1.5 pezzi
 
-    def __str__(self):
-        return f"{self.name} {self.symbol}"
 
 #                   **************************************************************
 #   Customer_record is the list that contains every client
@@ -109,7 +97,7 @@ class Operation(models.Model):
     @property
     def involved_materials_queryset(self):
         # Usiamo 'self' perché siamo dentro il modello
-        return Inventory.objects.filter(usedmaterials__operation_fk=self).distinct()
+        return inventory.Inventory.objects.filter(usedmaterials__operation_fk=self).distinct()
 
 
     def __str__(self):
@@ -124,86 +112,20 @@ class Machinery_records(models.Model):
     brand = models.CharField(max_length=50)
     model = models.CharField(max_length=100)
 
-#                   **************************************************************
-#   Inv_masterdata is the hearth of the Inventory.
-#   It contains all the details of every material or replacement
-#   that the company uses
-#
-class Inv_masterdata(models.Model):
 
-    sku = models.CharField(max_length=255)
-    barcode = EAN13Field(unique=True)
-    desc = models.CharField(max_length=255)
-    #id_category = models.ForeignKey(Inv_category)
-    measureUnit = models.ForeignKey(MeasureUnit, on_delete=models.PROTECT)
-    price = models.DecimalField(
-       max_digits=10, 
-       decimal_places=2,
-       verbose_name=_("Price")
-    )
-
-    measure_value = models.DecimalField(
-       max_digits=10,
-       decimal_places=2,
-       verbose_name=_("measure_value"),
-        null=True,
-        blank=True,
-    )
-
-    def __str__(self):
-        return self.desc
-    # measure = models.DecimalField(
-    #     max_digits = 10,
-    #     decimal_places=2,
-    #     verbose_name=_("Measure"
-    # )
-    
-#                   **************************************************************
-#   The Inventory contains every material and replacement of the machineries.
-#   Data are represented by a foreign key of the Inv_masterdata and the 
-#   Quantity 
-#
-class Inventory(models.Model):
-    inv_masterdata = models.OneToOneField(Inv_masterdata, on_delete=models.PROTECT)
-    quantity = models.DecimalField(
-        max_digits=10,
-        decimal_places=2,
-        verbose_name=_("quantity"),
-    )
-    
-    def __str__(self):
-        return self.inv_masterdata.desc
-
-    #Service methods
-    
-    def get_unit_measure(self):
-        return self.inv_masterdata.measureUnit
-    
-    def get_sku(self):
-        return self.inv_masterdata.sku
-     
-    def is_allowed_decimal_value(self):
-        return self.inv_masterdata.measureUnit.is_decimal
-    
-#                   **************************************************************
-
-#   USED MATERIALS define what materials are used for an operation, and
-
-#   relative quantities
-
-#
-
-#
-
+########## UserMaterials ##############
+## To move in "operation" django app ##
+#######################################
 class UsedMaterials(models.Model):
 
     operation_fk = models.ForeignKey(Operation, on_delete=models.PROTECT)
-    inventory_fk = models.ForeignKey(Inventory, on_delete=models.PROTECT)
+    inventory_fk = models.ForeignKey('inventory.Inventory', on_delete=models.PROTECT)
     qta = models.DecimalField(
        max_digits=10,
        decimal_places=2,
        verbose_name=_("qta"),
     )
+
 
 class Logs(models.Model):
     

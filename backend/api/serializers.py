@@ -1,6 +1,7 @@
 from django.contrib.auth.models import User # pyright: ignore[reportMissingModuleSource]
 from rest_framework import serializers # pyright: ignore[reportMissingImports, reportMissingModuleSource]
-from .inventory_services import InventoryServices
+
+from inventory.services.inventory_services import InventoryServices
 from services.app_services import ServiceOrchestrator
 
 #   MODELS
@@ -8,31 +9,34 @@ from .models import Report
 from .models import HR_records
 from .models import Customer_records
 from .models import Operation
-from .models import Inventory
-from .models import Inv_masterdata
-from .models import MeasureUnit
-from .models import Machinery_records
 from .models import UsedMaterials
 from .models import Logs
+from .models import Machinery_records
 
-class LogsSerializer(serializers.HyperlinkedModelSerializer):
+# EXTERNAL MODELS IMPORTATION (to delete)
+from inventory.models import Inventory
+from inventory.models import MeasureUnit
+from inventory.models import Inv_masterdata
+from inventory.models import Movement
+#########################################
+
+class LogsSerializer(serializers.ModelSerializer):
     class Meta:
         model = Logs
         fields = [
-            "url",
             "id",
             "log_text",
         ]
 
-class UsedMaterialsSerializer(serializers.HyperlinkedModelSerializer):
+class UsedMaterialsSerializer(serializers.ModelSerializer):
     
     operation_fk = serializers.HyperlinkedRelatedField(
         queryset = Operation.objects.all(),    
-        view_name='operation-detail', # Deve corrispondere al nome nel router    
+        view_name='api:operation-detail', # Deve corrispondere al nome nel router    
     )
     inventory_fk = serializers.HyperlinkedRelatedField(
         queryset = Inventory.objects.all(),    
-        view_name='inventory-detail', # Deve corrispondere al nome nel router    
+        view_name='inventory:inventory-detail', # Deve corrispondere al nome nel router    
     )
     desc = serializers.CharField(source="inventory_fk.inv_masterdata.desc", read_only = True)
 
@@ -40,13 +44,17 @@ class UsedMaterialsSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = UsedMaterials
         fields = [
-            "url",
             "id",
             "operation_fk",
             "inventory_fk",
             "desc",
             "qta",
         ]
+        extra_kwargs = {
+            'url': {'view_name': 'api:usedmaterials-detail'}
+        }
+
+
 
     def validate(self, data):
         if self.instance:
@@ -65,104 +73,18 @@ class UsedMaterialsSerializer(serializers.HyperlinkedModelSerializer):
             ServiceOrchestrator.validate_inventory_withdraw(inventory_item, qta)        
         return data
      
-class Machinery_recordsSerializer(serializers.HyperlinkedModelSerializer):
+class Machinery_recordsSerializer(serializers.ModelSerializer):
     class Meta:
         model = Machinery_records
         fields = [
-            "url",
             "id",
             "brand",
             "model",
-        ]    
+        ]       
+        # extra_kwargs = {
+        #     'url': {'view_name': 'api:machinery_records-detail'}
+        # }
 
-class MeasureUnitSerializer(serializers.HyperlinkedModelSerializer):
-    class Meta:
-        model = MeasureUnit
-        fields = [
-            "url",
-            "id",
-            "name",
-            "symbol",
-            "is_decimal",
-        ]
-
-class Inv_masterdataSerializer(serializers.HyperlinkedModelSerializer):
-    
-    measureUnit = serializers.PrimaryKeyRelatedField(
-        queryset = MeasureUnit.objects.all()
-    )
-    
-    class Meta:
-        model = Inv_masterdata
-        fields = [
-            "url",
-            "sku",
-            "barcode",
-            "desc",
-            "measureUnit",
-            "price",
-            "measure_value",   
-        ]
-    
-class InventorySerializerList(serializers.HyperlinkedModelSerializer):
-    
-    measureUnit = serializers.SerializerMethodField(read_only=True)
-
-    inv_masterdata = serializers.HyperlinkedRelatedField(
-        queryset = Inv_masterdata.objects.all(),    
-        view_name='inv_masterdata-detail', # Deve corrispondere al nome nel router    
-    )
-
-    desc = serializers.CharField(source="inv_masterdata.desc", read_only = True)
-
-
-    class Meta: 
-        model = Inventory
-        fields = [
-            "url",
-            "id",
-            "inv_masterdata",
-            "desc",
-#            "desc",
-#            "qta", #measure + unit
-            #write only
-            "quantity",
-            "measureUnit",
-        ]
-
-    def get_measureUnit(self, obj):
-        
-        # [1] Il campo nel modello si chiama 'measure'
-        unit = obj.inv_masterdata.measureUnit.symbol
-        return unit
-    
-
-    
-
-class InventorySerializerDetail(serializers.HyperlinkedModelSerializer):
-    inv_masterdata = serializers.HyperlinkedRelatedField(
-        queryset = Inv_masterdata.objects.all(),    
-        view_name='inv_masterdata-detail', # Deve corrispondere al nome nel router    
-    )    
-    class Meta:
-        model = Inventory
-        fields = [
-            'url',
-            'id',
-            'inv_masterdata',
-            'quantity',
-        ]
-
-    def validate(self, data):
-        inv_masterdata = data.get('inv_masterdata')
-        quantity = data.get('quantity')
-        inventory_item = Inventory(
-                                    inv_masterdata=inv_masterdata, 
-                                    quantity=quantity                                    
-                                    )
-        InventoryServices.validate_item(inventory_item)
-        return data
-     
 # """
 # ****************************************************************************************
 #     |----OPERATION SERIALIZER DETAIL-----|
@@ -173,16 +95,16 @@ class InventorySerializerDetail(serializers.HyperlinkedModelSerializer):
 
 #         #To add details | list ?
 # """
-class OperationSerializerDetail(serializers.HyperlinkedModelSerializer):
+class OperationSerializerDetail(serializers.ModelSerializer):
 
     report_fk = serializers.HyperlinkedRelatedField(
         queryset = Report.objects.all(),    
-        view_name='report-detail', # Deve corrispondere al nome nel router    
+        view_name='api:report-detail', # Deve corrispondere al nome nel router    
     )
 
     technician_fk = serializers.HyperlinkedRelatedField(
         many=True,
-        view_name='hr_records-detail', # Deve corrispondere al nome nel router
+        view_name='api:hr_records-detail', # Deve corrispondere al nome nel router
         queryset=HR_records.objects.all(),
     )
 
@@ -190,14 +112,13 @@ class OperationSerializerDetail(serializers.HyperlinkedModelSerializer):
         source='involved_materials_queryset', # HR_records method which provide technician urls
         many=True,
         read_only=True,
-        view_name='inventory-detail',
+        view_name='inventory:inventory-detail',
     )
         
 
     class Meta:
         model = Operation
         fields = [
-            "url",
             "id", 
             "date",
             "desc",
@@ -213,16 +134,15 @@ class OperationSerializerDetail(serializers.HyperlinkedModelSerializer):
     
 #         (not return only technicians)
 # """
-class OperationSerializerList(serializers.HyperlinkedModelSerializer):
+class OperationSerializerList(serializers.ModelSerializer):
     report_fk = serializers.HyperlinkedRelatedField(
         queryset = Report.objects.all(),    
-        view_name='report-detail', # Deve corrispondere al nome nel router    
+        view_name='api:report-detail', # Deve corrispondere al nome nel router    
     )
 
     class Meta:
         model = Operation
         fields = [
-            "url",
             "id", 
             "date",
             "desc",
@@ -234,12 +154,11 @@ class OperationSerializerList(serializers.HyperlinkedModelSerializer):
 #     |----CUSTOMER RECORDS SERIALIZER-----|
 #     Just serialize customers (models.Customer_records)
 # """
-class Customer_recordsSerializer(serializers.HyperlinkedModelSerializer):
+class Customer_recordsSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Customer_records
         fields = [
-            "url",
             "id", 
             "iva",
             "desc",
@@ -250,16 +169,19 @@ class Customer_recordsSerializer(serializers.HyperlinkedModelSerializer):
 #     |----HR_RECORDS SERIALIZER-----|
 #     Just serialize HR (models.HR_records)
 # """
-class HR_recordsSerializer(serializers.HyperlinkedModelSerializer):
+class HR_recordsSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = HR_records
         fields = [
-            "url",
             "name",
             "surname",
             "date_birth",
         ]
+            # extra_kwargs = {
+            #     'url': {'view_name': 'api:hr_records-detail'}
+            # }
+
 
 # """
 # ****************************************************************************************
@@ -272,17 +194,16 @@ class HR_recordsSerializer(serializers.HyperlinkedModelSerializer):
     # More details are provided in ReportSerializerDetail 
 # """
 
-class ReportSerializerList(serializers.HyperlinkedModelSerializer):
+class ReportSerializerList(serializers.ModelSerializer):
 
     customer_fk = serializers.HyperlinkedRelatedField(
-        view_name = "customer_records-detail",
+        view_name = "api:customer_records-detail",
         read_only = True,
     )
 
     class Meta:
         model = Report
         fields = [
-            "url",
             "report_id",
             "desc",
             "customer_fk",
@@ -305,7 +226,7 @@ class ReportSerializerList(serializers.HyperlinkedModelSerializer):
 
     
 # 
-class ReportSerializerDetail(serializers.HyperlinkedModelSerializer):
+class ReportSerializerDetail(serializers.ModelSerializer):
 #    
 #    owner = serializers.ReadOnlyField(source="owner.username")
 #        eventually develop a technician who owns a report (r u d)
@@ -313,17 +234,16 @@ class ReportSerializerDetail(serializers.HyperlinkedModelSerializer):
 #        any other involved technician will be only able to read n update (?)
     
 
-
     customer_fk = serializers.HyperlinkedRelatedField(
         many=False,
-        view_name='customer_records-detail', 
+        view_name='api:customer_records-detail', 
         queryset=Customer_records.objects.all(),
     )
 
     involved_operations = serializers.HyperlinkedRelatedField(
         many=True,
         read_only=True,
-        view_name='operation-detail',
+        view_name='api:operation-detail',
         source='operation_set',        # Reverse relation*:
     )
     # """
@@ -335,13 +255,12 @@ class ReportSerializerDetail(serializers.HyperlinkedModelSerializer):
         source='involved_technicians_queryset', # HR_records method which provide technician urls
         many=True,
         read_only=True,
-        view_name='hr_records-detail'
+        view_name='api:hr_records-detail'
     )
 
     class Meta:
         model = Report
         fields = [
-            "url",
             "report_id",            #UUID*
             "desc",
             "date_open",
