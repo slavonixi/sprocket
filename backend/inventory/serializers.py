@@ -13,11 +13,10 @@ from inventory.models import MeasureUnit
 ## ##
 #######################################
 
-class MeasureUnitSerializer(serializers.HyperlinkedModelSerializer):
+class MeasureUnitSerializer(serializers.ModelSerializer):
     class Meta:
         model = MeasureUnit
         fields = [
-            "url",
             "id",
             "name",
             "symbol",
@@ -29,7 +28,7 @@ class MeasureUnitSerializer(serializers.HyperlinkedModelSerializer):
 #######################################
 
 
-class MovementSerializer(serializers.HyperlinkedModelSerializer):
+class MovementSerializer(serializers.ModelSerializer):
 
     inventory_id = serializers.HyperlinkedRelatedField(
         queryset = Inventory.objects.all(),    
@@ -38,7 +37,6 @@ class MovementSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = MeasureUnit
         fields = [
-            "url",
             "id",
             "inventory_id",
             "quantity",
@@ -48,7 +46,7 @@ class MovementSerializer(serializers.HyperlinkedModelSerializer):
 ## ##
 #######################################
 
-class Inv_masterdataSerializer(serializers.HyperlinkedModelSerializer):
+class Inv_masterdataSerializer(serializers.ModelSerializer):
     
     measureUnit = serializers.PrimaryKeyRelatedField(
         queryset = MeasureUnit.objects.all()
@@ -57,7 +55,6 @@ class Inv_masterdataSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Inv_masterdata
         fields = [
-            "url",
             "sku",
             "barcode",
             "desc",
@@ -70,7 +67,7 @@ class Inv_masterdataSerializer(serializers.HyperlinkedModelSerializer):
 ## ##
 #######################################
 
-class InventorySerializerList(serializers.HyperlinkedModelSerializer):
+class InventorySerializerList(serializers.ModelSerializer):
     
     measureUnit = serializers.SerializerMethodField(read_only=True)
 
@@ -85,7 +82,6 @@ class InventorySerializerList(serializers.HyperlinkedModelSerializer):
     class Meta: 
         model = Inventory
         fields = [
-            "url",
             "id",
             "inv_masterdata",
             "desc",
@@ -108,7 +104,7 @@ class InventorySerializerList(serializers.HyperlinkedModelSerializer):
 ## ##
 #######################################
 
-class InventorySerializerDetail(serializers.HyperlinkedModelSerializer):
+class InventorySerializerDetail(serializers.ModelSerializer):
     inv_masterdata = serializers.HyperlinkedRelatedField(
         queryset = Inv_masterdata.objects.all(),    
         view_name='inv_masterdata-detail', # Deve corrispondere al nome nel router    
@@ -116,7 +112,6 @@ class InventorySerializerDetail(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Inventory
         fields = [
-            'url',
             'id',
             'inv_masterdata',
             'quantity',
