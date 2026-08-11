@@ -10,7 +10,7 @@ from inventory.models import MeasureUnit
 
 
 ########## MeasureUnitSerializer ######
-## ##
+
 #######################################
 
 class MeasureUnitSerializer(serializers.ModelSerializer):
