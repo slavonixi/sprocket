@@ -1,21 +1,21 @@
 from django.shortcuts import render
 from . import serializers, models
-from rest_framework import generics
+from rest_framework import generics #pyright: ignore
 from django.contrib.auth.models import User
 
-from rest_framework import permissions
-from rest_framework.decorators import api_view
-from rest_framework.response import Response
-from rest_framework.reverse import reverse
-from rest_framework import renderers
-from rest_framework import viewsets
-from rest_framework.decorators import action
-from rest_framework import status
-from django.db import transaction
+from rest_framework import permissions #pyright: ignore
+from rest_framework.decorators import api_view #pyright: ignore
+from rest_framework.response import Response #pyright: ignore
+from rest_framework.reverse import reverse #pyright: ignore
+from rest_framework import renderers #pyright: ignore
+from rest_framework import viewsets #pyright: ignore
+from rest_framework.decorators import action #pyright: ignore
+from rest_framework import status #pyright: ignore
+from django.db import transaction 
 from django.http import HttpResponse
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.response import Response
-from rest_framework import permissions, status
+from rest_framework.decorators import api_view, permission_classes #pyright: ignore
+from rest_framework.response import Response #pyright: ignore
+from rest_framework import permissions, status #pyright: ignore
 
 
 import inventory.models
