@@ -1,5 +1,8 @@
 from django.urls import path, include
 from . import logs
+from django.contrib import admin
+
+
 
 urlpatterns = [
     # path("admin/", admin.site.urls), # Se usi l'admin di Django
@@ -14,4 +17,6 @@ urlpatterns = [
 # Una singola rotta di autenticazione globale è sufficiente
 urlpatterns += [
     path("api-auth/", include("rest_framework.urls")),
+    path('admin/', admin.site.urls),    
 ]
+
