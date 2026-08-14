@@ -89,12 +89,34 @@ class Inventory(models.Model):
 #######################################
 
 class Movement(models.Model):
+    class OperationDirection(models.TextChoices):
+        LOAD = "IN", _("Inbound")
+        UNLOAD = "OU", _("Outbound")
+    
     inventory_id = models.ForeignKey(Inventory, on_delete=models.PROTECT)
     quantity = models.DecimalField(
         max_digits=10,
         decimal_places=2,
         verbose_name=_("quantity"),
     )
+    #defines if the stock has to increase or decrease
+    #negative values are not allowed - movement_services increase
+    #or decrease the stock depending on the operation_direction (inbound or outbound)
+    operation_direction = models.CharField(
+        max_length=2,
+        choices=OperationDirection,
+    )
+    #define what kind of operation has been performed (to develop)
+    #implementations example below:
+        #PURCHASE_RECEIPT = "PURCHASE_RECEIPT", "Purchase Receipt"
+        #SALES_SHIPMENT   = "SALES_SHIPMENT", "Sales Shipment"
+        #CUSTOMER_RETURN  = "CUSTOMER_RETURN", "Customer Return"
+        #CYCLE_COUNT      = "CYCLE_COUNT", "Cycle Count Adjustment"
+        #DAMAGE_WRITE_OFF = "DAMAGE_WRITE_OFF", "Damage Write-Off"
+        #INTERNAL_TRANSFER= "INTERNAL_TRANSFER", "Internal Transfer"
+    # movement services and orchestrator must provide rules to handle operations
+    # based on the operation type
+    #operation_type = models.TextField(max_length=200) #NOT COMPLETED
 
     def get_inventory_item(self):
         return self.inventory_id
