@@ -1,10 +1,35 @@
-from api import exceptions
+from backend.inventory import exceptions
 from django.db import transaction
 from inventory.models import Movement
 from rest_framework.exceptions import APIException # pyright: ignore
 
 
 class MovementServices:
+
+
+    #########################
+    ## Validation methods ###
+    #########################
+
+    @staticmethod
+    def is_not_zero(qty):
+        if qty != 0:
+            return True
+        else:
+            raise exceptions.MovementQtyIsZeroError()
+
+    @staticmethod
+    def validate_movement_item(movement_item):
+        """ Called by InventoryOrchestrator to let the serializer validate a 
+            Movement item
+        """
+        MovementServices.is_not_zero(movement_item.qty)
+        return True
+            
+
+    #########################
+    ## Application methods ##
+    #########################
 
     @staticmethod
     def create_movement(movement_item):
