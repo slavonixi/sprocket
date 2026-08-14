@@ -195,3 +195,6 @@ spr# Created by https://www.toptal.com/developers/gitignore/api/django,visualstu
 .ionide
 
 # End of https://www.toptal.com/developers/gitignore/api/django,visualstudiocode
+
+### Personal notes files ###
+notes.txt

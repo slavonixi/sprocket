@@ -44,7 +44,7 @@ class MasterdataViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
 class MovementViewSet(          #PUT, PATCH, DELETE are forbidden (http 405)
-    mixins.CreateModelMixin,    # POST 
+    mixins.CreateModelMixin,    # POST inve
     mixins.ListModelMixin,      # GET list
     mixins.RetrieveModelMixin,  # GET detail
     viewsets.GenericViewSet
