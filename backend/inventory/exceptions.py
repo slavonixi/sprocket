@@ -1,5 +1,5 @@
-from rest_framework.exceptions import APIException
-from rest_framework import status
+from rest_framework.exceptions import APIException #pyright: ignore
+from rest_framework import status #pyright: ignore
 from django.utils.translation import gettext_lazy as _
 
 def buildMessage(*, status="failed", operation="not specified", code, **kwargs):
@@ -18,7 +18,7 @@ def buildMessage(*, status="failed", operation="not specified", code, **kwargs):
 class InventoryError(APIException):
     """Classe base per errori di magazzino."""
     status_code = status.HTTP_400_BAD_REQUEST
-    default_code = 'inventory_error'
+    default_code = 'Exception.Inventory'
     
 class InsufficientStockError(InventoryError):
     def __init__(self, requested_quantity, inventory_item, op='withdraw'):
@@ -79,4 +79,10 @@ class NoChangeDetectedInUpdate(InventoryError):
         )
         super().__init__(result)          
 
-               
+class MovementQtyIsZeroError(InventoryError):
+    def __init__(self, op="inventory_movement"):
+        default_detail = InventoryError.default_code + ".MovementQtyIsZeroError"
+        result = buildMessage(
+            operation=op,
+            code = default_detail,
+        )
