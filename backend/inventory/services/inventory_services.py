@@ -1,4 +1,4 @@
-from api import exceptions
+from backend.inventory import exceptions
 from django.db import transaction
 from inventory.models import Inventory
 from inventory.models import Inv_masterdata
