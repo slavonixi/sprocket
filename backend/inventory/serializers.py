@@ -1,6 +1,6 @@
 from django.contrib.auth.models import User # pyright: ignore[reportMissingModuleSource]
 from rest_framework import serializers # pyright: ignore[reportMissingImports, reportMissingModuleSource]
-
+from inventory import exceptions
 #######################
 # Models importations #
 #######################
@@ -51,13 +51,8 @@ class MovementSerializer(serializers.ModelSerializer):
         ]
 
     def validate(self, data):
-        if self.instance:   #PUT/PATCH (update)
-            new_qty = data.qty
-            InventoryOrchestrator.validate_movement_update(
-                self.instance.inventory_id, 
-                self.instance,
-                new_qty
-            )
+        if self.instance:   #PUT/PATCH (update) - FORBIDDEN 
+            raise exceptions.UpdateOrDeleteIsForbidden
         else:               #POST (create)
             movement_item = Movement(
                 data.id,

@@ -8,7 +8,7 @@ from rest_framework.decorators import api_view #pyright: ignore
 from rest_framework.response import Response #pyright: ignore
 from rest_framework.reverse import reverse #pyright: ignore
 from rest_framework import renderers #pyright: ignore
-from rest_framework import viewsets #pyright: ignore
+from rest_framework import viewsets, mixins #pyright: ignore
 from rest_framework.decorators import action #pyright: ignore
 from rest_framework import status #pyright: ignore
 from django.db import transaction 
@@ -43,7 +43,12 @@ class MasterdataViewSet(viewsets.ModelViewSet):
     queryset = models.Inv_masterdata.objects.all()
     permission_classes = [permissions.IsAuthenticated]
 
-class MovementViewSet(viewsets.ModelViewSet):
+class MovementViewSet(          #PUT, PATCH, DELETE are forbidden (http 405)
+    mixins.CreateModelMixin,    # POST 
+    mixins.ListModelMixin,      # GET list
+    mixins.RetrieveModelMixin,  # GET detail
+    viewsets.GenericViewSet
+):
 
     serializer_class = MovementSerializer
     queryset = models.Movement.objects.all()

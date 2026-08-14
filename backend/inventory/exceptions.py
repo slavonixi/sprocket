@@ -16,9 +16,19 @@ def buildMessage(*, status="failed", operation="not specified", code, **kwargs):
     return message
 
 class InventoryError(APIException):
-    """Classe base per errori di magazzino."""
+    """Parent class for the inventory/stock errors"""
     status_code = status.HTTP_400_BAD_REQUEST
-    default_code = 'Exception.Inventory'
+    default_detail = 'Exception.Inventory'
+
+class SerializerError(APIException):
+    """Parent class for the serializers-oriented errors"""
+    status_code = status.HTTP_405_METHOD_NOT_ALLOWED
+    default_detail = 'Exception.Serializer'
+
+############################
+### Inventory Exceptions ###
+############################
+
     
 class InsufficientStockError(InventoryError):
     def __init__(self, requested_quantity, inventory_item, op='withdraw'):
@@ -53,16 +63,12 @@ class DecimalValueError(InventoryError):
         )
         super().__init__(result)        
 
-class NegativeOrZeroError(InventoryError):
-    def __init__(self, qta ,op = 'stock_adjust'):
-        data = {
-            'inserted_quantity' : qta
-        }
-        default_detail = 'Exception.Inventory.NegativeOrZeroError'
+class ZeroError(InventoryError):
+    def __init__(self, op = 'stock_adjust'):
+        default_detail = 'Exception.Inventory.ZeroError'
         result = buildMessage(
             operation = op,
             code = default_detail,
-            **data,
         )
         super().__init__(result)          
 
@@ -79,10 +85,38 @@ class NoChangeDetectedInUpdate(InventoryError):
         )
         super().__init__(result)          
 
-class MovementQtyIsZeroError(InventoryError):
+class MovementQtyIsZeroOrNegativeError(InventoryError):
     def __init__(self, op="inventory_movement"):
-        default_detail = InventoryError.default_code + ".MovementQtyIsZeroError"
+        default_detail = InventoryError.default_code + ".MovementQtyIsZeroOrNegativeError"
         result = buildMessage(
             operation=op,
             code = default_detail,
         )
+        super().__init__(result)
+
+class IllegalOperationValue(InventoryError):
+    def __init__(self, illegal_value, op="movement_create"):
+        default_detail = InventoryError.default_code + ".IllegalOperationValue"
+        data = {
+            'illegal_value': illegal_value
+        }
+        result = buildMessage(
+            operation=op,
+            code = default_detail,
+            **data,
+        )
+        super().__init__(result)
+
+
+###########################
+## Serializer Exceptions ##
+###########################
+
+class UpdateOrDeleteIsForbidden(SerializerError):
+    def __init__(self, op="update_or_delete_movement"):
+        default_detail = self.default_detail+".UpdateOrDeleteIsForbidden"
+        result = buildMessage(
+            operation=op,
+            code = default_detail,
+        )
+        super().__init__(result)

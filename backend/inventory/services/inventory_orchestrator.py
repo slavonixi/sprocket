@@ -20,18 +20,15 @@ class InventoryOrchestrator:
     """ 
 
     #############################
-    #     Validation Method     #
+    #    Validation Methods     #
     #############################
-    @staticmethod
-    def validate_movement_update(inventory_item, movement_item, old_qty):
-
-        new_qty = movement_item.qty
-        MovementServices.validate_movement_item(movement_item)
-        InventoryServices.validate_stock_operation_update(inventory_item, old_qty, new_qty)
 
     @staticmethod
     def validate_movement_create(inventory_item, movement_item):
 
         qty = movement_item.qty
-        MovementServices.validate_movement_item(movement_item)
-        InventoryServices.validate_stock_operation(inventory_item, qty)
+        try:
+            MovementServices.validate_movement_item(movement_item)
+            InventoryServices.validate_stock_operation(inventory_item, qty)
+        except exceptions.InventoryError:
+            pass

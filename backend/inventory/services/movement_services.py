@@ -12,20 +12,38 @@ class MovementServices:
     #########################
 
     @staticmethod
-    def is_not_zero(qty):
-        if qty != 0:
+    def is_not_zero_or_negative(qty):
+        if qty > 0:
             return True
         else:
-            raise exceptions.MovementQtyIsZeroError()
+            raise exceptions.MovementQtyIsZeroOrNegativeError()
 
     @staticmethod
     def validate_movement_item(movement_item):
         """ Called by InventoryOrchestrator to let the serializer validate a 
             Movement item
         """
-        MovementServices.is_not_zero(movement_item.qty)
+        MovementServices.is_not_zero_or_negative(movement_item.qty)
         return True
-            
+
+    #########################
+    ##    Utils methods    ##
+    #########################
+
+    def get_signed_qty(movement_item: Movement):
+        """
+            Tells if the value to apply to the stock is positive or negative
+            depending on operation_direction (inbound or outbound)
+        """
+        if movement_item.operation_direction == Movement.OperationDirection.INBOUND:
+            return movement_item.qty  #return positive qty
+        elif movement_item.operation_direction == Movement.OperationDirection.OUTBOUND:
+            return -movement_item.qty #return negtive qty
+        else:
+            raise exceptions.IllegalOperationValue(
+                op="movement_create", 
+                illegal_value=movement_item.operation_direction
+            )
 
     #########################
     ## Application methods ##
@@ -36,15 +54,4 @@ class MovementServices:
         movement_item.save()
         return movement_item
 
-    @staticmethod
-    def update_movement(movement_id, new_qty):
-         with transaction.atomic():
-            movement_item = Movement.objects.select_for_update().get(id=movement_id)
-            movement_item.qty = new_qty
-            movement_item.save()
-            return movement_item
-
-    @staticmethod
-    def delete_movement(movement_item):
-        movement_item.delete()
-        return True
+    # DELETE AND UPDATE MOVEMENT IS FORBIDDEN

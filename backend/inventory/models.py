@@ -90,8 +90,8 @@ class Inventory(models.Model):
 
 class Movement(models.Model):
     class OperationDirection(models.TextChoices):
-        LOAD = "IN", _("Inbound")
-        UNLOAD = "OU", _("Outbound")
+        INBOUND = "IN", _("Inbound")
+        OUTBOUND = "OU", _("Outbound")
     
     inventory_id = models.ForeignKey(Inventory, on_delete=models.PROTECT)
     quantity = models.DecimalField(
