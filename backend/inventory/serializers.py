@@ -1,12 +1,20 @@
 from django.contrib.auth.models import User # pyright: ignore[reportMissingModuleSource]
 from rest_framework import serializers # pyright: ignore[reportMissingImports, reportMissingModuleSource]
 
-######################
-# Models importations
-######################
+#######################
+# Models importations #
+#######################
 from inventory.models import Inventory
 from inventory.models import Inv_masterdata
 from inventory.models import MeasureUnit
+from inventory.models import Movement
+
+#########################
+# Services importations #
+#########################
+from inventory.services.movement_services import MovementServices
+from inventory.services.inventory_services import InventoryServices
+from inventory.services.inventory_orchestrator import InventoryOrchestrator
 
 
 ########## MeasureUnitSerializer ######
@@ -42,6 +50,25 @@ class MovementSerializer(serializers.ModelSerializer):
             "quantity",
         ]
 
+    def validate(self, data):
+        if self.instance:   #PUT/PATCH (update)
+            new_qty = data.qty
+            InventoryOrchestrator.validate_movement_update(
+                self.instance.inventory_id, 
+                self.instance,
+                new_qty
+            )
+        else:               #POST (create)
+            movement_item = Movement(
+                data.id,
+                data.inventory_id,
+                data.qty,
+            )
+            InventoryOrchestrator.validate_movement_create(
+                movement_item.inventory_id,
+                movement_item,
+            )
+                 
 ########## Inv_masterdataSerializer ###
 ## ##
 #######################################
