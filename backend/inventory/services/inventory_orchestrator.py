@@ -1,10 +1,9 @@
 from inventory.services.inventory_services import InventoryServices
 from inventory.services.movement_services import MovementServices
-from backend.inventory import exceptions
+from inventory import exceptions
 from django.db import transaction
 from api import tasks
 from celery import Celery
-from backend.inventory import exceptions
 import traceback
 import sys
 from rest_framework.exceptions import APIException #type: ignore

@@ -1,4 +1,4 @@
-from backend.inventory import exceptions
+from inventory import exceptions
 from django.db import transaction
 from inventory.models import Movement
 from rest_framework.exceptions import APIException # pyright: ignore

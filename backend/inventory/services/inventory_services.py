@@ -1,4 +1,4 @@
-from backend.inventory import exceptions
+from inventory import exceptions
 from django.db import transaction
 from inventory.models import Inventory
 from inventory.models import Inv_masterdata
@@ -152,6 +152,9 @@ class InventoryServices:
                 InventoryServices.is_sufficient(inventory_item, movement_qty)
         except exceptions.InventoryError as e:
             raise e
+        return True
+
+    def validate_item(inventory_item):
         return True
 
 #**********************************************************************************************

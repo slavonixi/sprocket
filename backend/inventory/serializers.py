@@ -38,15 +38,15 @@ class MeasureUnitSerializer(serializers.ModelSerializer):
 
 class MovementSerializer(serializers.ModelSerializer):
 
-    inventory_id = serializers.HyperlinkedRelatedField(
+    inventory_id = serializers.PrimaryKeyRelatedField(
         queryset = Inventory.objects.all(),    
-        view_name='inventory-detail',  
     )
     class Meta:
-        model = MeasureUnit
+        model = Movement
         fields = [
             "id",
             "inventory_id",
+            "operation_direction",
             "quantity",
         ]
 
@@ -93,9 +93,8 @@ class InventorySerializerList(serializers.ModelSerializer):
     
     measureUnit = serializers.SerializerMethodField(read_only=True)
 
-    inv_masterdata = serializers.HyperlinkedRelatedField(
+    inv_masterdata = serializers.PrimaryKeyRelatedField(
         queryset = Inv_masterdata.objects.all(),    
-        view_name='inv_masterdata-detail', # Deve corrispondere al nome nel router    
     )
 
     desc = serializers.CharField(source="inv_masterdata.desc", read_only = True)
@@ -127,9 +126,8 @@ class InventorySerializerList(serializers.ModelSerializer):
 #######################################
 
 class InventorySerializerDetail(serializers.ModelSerializer):
-    inv_masterdata = serializers.HyperlinkedRelatedField(
+    inv_masterdata = serializers.PrimaryKeyRelatedField(
         queryset = Inv_masterdata.objects.all(),    
-        view_name='inv_masterdata-detail', # Deve corrispondere al nome nel router    
     )    
     class Meta:
         model = Inventory

@@ -27,8 +27,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework import permissions, status
 
-from services.app_services import ServiceOrchestrator
-
+from inventory.services import inventory_orchestrator
 
 @api_view(['POST'])
 @permission_classes([permissions.AllowAny]) # In produzione usa IsAuthenticated
@@ -67,7 +66,7 @@ class UsedMaterialsViewSet(viewsets.ModelViewSet):
         qty_requested = serializer.validated_data['qta']
         inventory_id = serializer.validated_data['inventory_fk'].id
         operation_obj = serializer.validated_data['operation_fk']
-        ServiceOrchestrator.withdraw_inventory(inventory_id, qty_requested) #orchestrator
+        #ServiceOrchestrator.withdraw_inventory(inventory_id, qty_requested) #orchestrator
         serializer.save()
 
     def perform_update(self, serializer):
@@ -75,13 +74,13 @@ class UsedMaterialsViewSet(viewsets.ModelViewSet):
         old_quantity = self.get_object().qta
         new_quantity = serializer.validated_data.get('qta')
         
-        ServiceOrchestrator.update_withdraw(inventory_id, old_quantity, new_quantity) #orchestrator
+        #ServiceOrchestrator.update_withdraw(inventory_id, old_quantity, new_quantity) #orchestrator
         serializer.save()
 
     def perform_delete(self, instance):
         quantity_to_restore = instance.qta
         inventory_id = instance.inventory.fk.id
-        ServiceOrchestrator.delete_withdraw(quantity_to_restore)
+        #ServiceOrchestrator.delete_withdraw(quantity_to_restore)
         instance.delete()
 
 

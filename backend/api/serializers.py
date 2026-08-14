@@ -2,7 +2,7 @@ from django.contrib.auth.models import User # pyright: ignore[reportMissingModul
 from rest_framework import serializers # pyright: ignore[reportMissingImports, reportMissingModuleSource]
 
 from inventory.services.inventory_services import InventoryServices
-from services.app_services import ServiceOrchestrator
+#from services.app_services import ServiceOrchestrator
 
 #   MODELS
 from .models import Report
