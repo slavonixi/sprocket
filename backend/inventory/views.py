@@ -21,14 +21,19 @@ from rest_framework import permissions, status #pyright: ignore
 import inventory.models
 import core.permissions
 
-# Create your views here.
+#models
+from inventory.models import Movement
+from inventory.models import Inventory
+
+#serializers
 from .serializers import InventorySerializerList
 from .serializers import InventorySerializerDetail
 from .serializers import Inv_masterdataSerializer
 from .serializers import MeasureUnitSerializer
 from .serializers import MovementSerializer
 
-
+#services
+from inventory.services.inventory_orchestrator import InventoryOrchestrator
 
 class MeasureUnitViewSet(viewsets.ModelViewSet):
 
@@ -53,6 +58,15 @@ class MovementViewSet(          #PUT, PATCH, DELETE are forbidden (http 405)
     serializer_class = MovementSerializer
     queryset = models.Movement.objects.all()
     permission_classes = [permissions.IsAuthenticated]
+
+    def perform_create(self, serializer):
+        movement_item = Movement(
+            inventory_id=serializer.validated_data['inventory_id'],            
+            quantity=serializer.validated_data['quantity'],            
+            operation_direction=serializer.validated_data['operation_direction'],            
+        )
+        inventory_item = serializer.validated_data['inventory_id']
+        InventoryOrchestrator.create_new_movement(inventory_item, movement_item)
     
 class InventoryViewSet(viewsets.ModelViewSet):
     """

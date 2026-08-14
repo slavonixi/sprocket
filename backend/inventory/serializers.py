@@ -53,14 +53,15 @@ class MovementSerializer(serializers.ModelSerializer):
             raise exceptions.UpdateOrDeleteIsForbidden
         else:               #POST (create)
             movement_item = Movement(
-                data.id,
-                data.inventory_id,
-                data.qty,
+                inventory_id = data.get('inventory_id'),
+                operation_direction = data.get('operation_direction'),
+                quantity = data.get('quantity'),
             )
             InventoryOrchestrator.validate_movement_create(
                 movement_item.inventory_id,
                 movement_item,
             )
+        return data
 
 #######################################                 
 ########## Inv_masterdataSerializer ###

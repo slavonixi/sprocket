@@ -83,20 +83,16 @@ class InventoryServices:
             raise exceptions.NegativeOrZeroError(qty)
 
     @staticmethod
-    def check_decimal(inventory_item, qty=False):
+    def check_decimal(inventory_item):
         """ Ensure measures limits are followed.
             e.g. 10.4 pz is an irregular value
                  (pieces cannot be decimal)
                  10.4 kg is a regular value
         """
-        #value = false -> check if quantity is valid in insertion
-        if not qty:
-            qty = inventory_item.quantity
-        #value != false -> check if a draft quantity to add or remove is valid
         
-        if qty % 1: #check if the number is integer or not
+        if inventory_item.quantity % 1: #check if the number is integer or not
             if not inventory_item.is_allowed_decimal_value():
-                raise exceptions.DecimalValueError(inventory_item, qty)
+                raise exceptions.DecimalValueError(inventory_item, inventory_item.quantity)
         
         return True
 
@@ -178,7 +174,7 @@ class InventoryServices:
         return inventory_item
 
     @staticmethod
-    def add_value_to_stock(inventory_id, qty): 
+    def apply_to_stock(inventory_id, qty): 
         """
         add the qty value of an inventory element. It performs a stock
         availability check to avoid 'critical race' issues.
@@ -194,7 +190,7 @@ class InventoryServices:
             inventory_item.quantity += qty 
             inventory_item.save()
             result = InventoryServices.create_return_response(
-                operation = "InventoryServices.add_value_to_stock",
+                operation = "InventoryServices.apply_to_stock",
                 withdrawed_qty = qty,
                 item = inventory_item,
             )
@@ -202,7 +198,7 @@ class InventoryServices:
 
     def update_stock_value(inventory_id, old_qty, new_qty):
         delta = InventoryServices.get_delta(old_qty, new_qty)
-        result = InventoryServices.add_value_to_stock(inventory_id, delta)
+        result = InventoryServices.apply_to_stock(inventory_id, delta)
         return result
 
     def delete_stock(inventory_item):
