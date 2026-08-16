@@ -17,18 +17,16 @@
 
 ### 📦 Inventory & Stock Management
 *   **Masterdata Control:** Centralized repository for all materials and spare parts via **`Inv_masterdata`**, including details like SKU, weight, and pricing.
-*   **Custom EAN13 Barcodes:** Includes a specialized **`EAN13Field`** that ensures every barcode follows the 13-digit numeric standard.
-*   **Real-time Inventory:** Tracks the physical quantity of elements currently in stock. Inventory business-logic is meticulously designed to avoid conflicts and critical races between stock operations.
-
+*   **Real-time reliable Inventory:** Tracks the physical quantity of elements currently in stock. Inventory business-logic is meticulously designed to avoid conflicts and critical races between stock operations. Every inventory operation is tracked and saved in the movements history, tagged with detailed information about the movement.
+*   **Pdf/xlsx automated scanner:** Built-in file scanner to migrate excel inventories directly in the software. Forget spending nights to insert manually data into the software.
 ### 🛠 Maintenance Operations
 *   **Maintenance Reports:** Formalized **`Report`** entities that track the status (Draft, Open, Closed) of every intervention, also providing several information about the customer, machineries, involved stocks and items.
-*   **Detailed Operations:** A single report can contain multiple **`Operation`** records, detailing specific tasks performed over several days.
-
+*   **Detailed Operations:** A single report can contain multiple **`Operation`** records, detailing specific tasks performed over several days and materials usage per single task.
+*   **Professional dashboard:** Administration-oriented dashboard provided by the browser platform allows offices to consult information about reports, technicians, inventory, clients, machineries, and manage documents.
 ### 👥 Client & HR Management
-*   **Customer Records:** Stores client details with unique **UUID4** identifiers for secure and collision-free integration.
-*   **Workforce Management:** Detailed technical staff profiles with associated labor cost tracking.
-
-## 🏗 Architectural Highlights
+*   **Workforce Management:** Detailed technical staff profiles with associated tasks tracking.
+*   **Technicians mobile app:** User-friendly mobile application allows technicians to manage their own workflow and tasks, materials usage, and operations reportage. With asynchronous task handling and local information storage, the app is able to work even without internet access ensuring information synchronization and coherence.
+*   **Customer records:** Customer data and operation history allows to track progress, maintenance operations and client characteristics through several months or years.
 
 Based on our implementation, **Sprocket** prioritizes data integrity and performance:
 
@@ -37,28 +35,28 @@ Based on our implementation, **Sprocket** prioritizes data integrity and perform
 *   **Structured Exceptions:** The system uses data-driven exceptions that return rich JSON objects (including SKU, requested quantity, and unit symbols), allowing the frontend to display localized, precise error messages.
 *   **Service Layer Pattern:** Business logic is decoupled from views into specialized Services and Action Classes, keeping the codebase modular and avoiding monolithic orchestrators.
 
+## 📝 Developing progress
+
+*   **16/08/2026 - Inventory business logic:** Developing API inventory business logic, Movement tracking and retrieve operations (git branch 'movement-business-logic')
+
+## ✔️ Todo
+
+*   **Permissions and autorizations:** Implement user permissions through BasePermission class in DRF and django-rules 
+*   **micro-service modules:** Decompose 'api' django application into service apps (e.g. inventory, HR_management, Report...) 
+*   **Backend and API business logic:** Implement business logic of the other domains
+*   **Unit-test:** Implement unit tests with pytests
+*   **Web interface:**: develop web interface using react
+
+
 ## 📥 Installation
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-repo/sprocket.git
+git clone https://github.com/sprocket/sprocket.git
 
 # Build and start the containers
 docker-compose up --build
 
-# Run migrations
-docker-compose exec web python manage.py migrate
+# Migrations will automatically run
 ```
 
-## 🧪 Testing Suite
-The project uses Django's built-in testing framework along with pytest (optional) to ensure the reliability of maintenance operations and stock integrity.
-Running Tests
-Since the application is containerized, you should run tests inside the web container to ensure the correct environment (Postgres, Redis) is used:
-
-```bash
-# Run all tests
-docker-compose exec web python manage.py test
-
-# Run tests for a specific module (e.g., Inventory)
-docker-compose exec web python manage.py test inventory.tests
-```
