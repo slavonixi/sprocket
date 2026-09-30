@@ -33,7 +33,7 @@ class MovementServices:
     def get_signed_qty(movement_item: Movement):
         """
             Tells if the value to apply to the stock is positive or negative
-            depending on operation_direction (inbound or outbound)
+            depends on operation_direction (inbound or outbound)
         """
         if movement_item.operation_direction == Movement.OperationDirection.INBOUND:
             return movement_item.quantity  #return positive quantity
@@ -54,4 +54,4 @@ class MovementServices:
         movement_item.save()
         return movement_item
 
-    # DELETE AND UPDATE MOVEMENT IS FORBIDDEN
+    # DELETE AND UPDATE MOVEMENTs IS FORBIDDEN

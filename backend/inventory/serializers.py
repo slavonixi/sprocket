@@ -46,6 +46,7 @@ class MovementSerializer(serializers.ModelSerializer):
             "inventory_id",
             "operation_direction",
             "quantity",
+            "correction_id",
         ]
 
     def validate(self, data):

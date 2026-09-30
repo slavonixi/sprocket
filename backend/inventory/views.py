@@ -49,7 +49,7 @@ class MasterdataViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
 class MovementViewSet(          #PUT, PATCH, DELETE are forbidden (http 405)
-    mixins.CreateModelMixin,    # POST inve
+    mixins.CreateModelMixin,    # POST inventory
     mixins.ListModelMixin,      # GET list
     mixins.RetrieveModelMixin,  # GET detail
     viewsets.GenericViewSet
@@ -63,7 +63,8 @@ class MovementViewSet(          #PUT, PATCH, DELETE are forbidden (http 405)
         movement_item = Movement(
             inventory_id=serializer.validated_data['inventory_id'],            
             quantity=serializer.validated_data['quantity'],            
-            operation_direction=serializer.validated_data['operation_direction'],            
+            operation_direction=serializer.validated_data['operation_direction'],       
+            correction_id=serializer.validated_data['correction_id'],     
         )
         inventory_item = serializer.validated_data['inventory_id']
         InventoryOrchestrator.create_new_movement(inventory_item, movement_item)

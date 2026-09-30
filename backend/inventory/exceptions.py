@@ -120,3 +120,16 @@ class UpdateOrDeleteIsForbidden(SerializerError):
             code = default_detail,
         )
         super().__init__(result)
+
+############################
+## Permissions exceptions ##
+############################
+
+class CannotAdjustMovement(InventoryError):
+    def __init__(self, op="adjust_movement"):
+        default_detail = self.default_detail+".CannotAdjustMovement"
+        result = buildMessage(
+            operation=op,
+            code = default_detail,
+        )
+        super().__init__(result)
