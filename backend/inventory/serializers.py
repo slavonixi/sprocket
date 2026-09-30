@@ -47,20 +47,28 @@ class MovementSerializer(serializers.ModelSerializer):
             "operation_direction",
             "quantity",
             "correction_id",
+            "created_by",
         ]
 
     def validate(self, data):
         if self.instance:   #PUT/PATCH (update) - FORBIDDEN 
             raise exceptions.UpdateOrDeleteIsForbidden
         else:               #POST (create)
+
+            request = self.context.get('request')
+            user = request.user if request else None
+
             movement_item = Movement(
                 inventory_id = data.get('inventory_id'),
                 operation_direction = data.get('operation_direction'),
                 quantity = data.get('quantity'),
+                correction_id = data.get('correction_id'),
+                created_by = data.get('created_by'),
             )
             InventoryOrchestrator.validate_movement_create(
                 movement_item.inventory_id,
                 movement_item,
+                user=user,
             )
         return data
 

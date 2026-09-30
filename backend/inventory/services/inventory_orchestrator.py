@@ -27,10 +27,19 @@ class InventoryOrchestrator:
     #############################
 
     @staticmethod
-    def validate_movement_create(inventory_item : Inventory, movement_item : Movement):
+    def validate_movement_create(inventory_item : Inventory, movement_item : Movement, *, user):
 
         qty = movement_item.quantity
         try:
+
+            if not user.is_active:
+                raise exceptions.InactiveUser(user=user.username, op="movement_creation")
+
+            # Business Rule: If this is a correction, user MUST be a Supervisor
+            if movement_item.correction_id is not None:
+                if not user.has_perm('inventory.can_adjust_movement'):
+                    raise exceptions.CannotAdjustMovement(user.username)
+            
             MovementServices.validate_movement_item(movement_item)
             InventoryServices.validate_stock_operation(inventory_item, qty)
         except exceptions.InventoryError:
