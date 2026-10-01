@@ -83,16 +83,16 @@ class InventoryServices:
             raise exceptions.NegativeOrZeroError(qty)
 
     @staticmethod
-    def check_decimal(inventory_item):
+    def check_decimal(inventory_item, movement_qty):
         """ Ensure measures limits are followed.
             e.g. 10.4 pz is an irregular value
                  (pieces cannot be decimal)
                  10.4 kg is a regular value
         """
         
-        if inventory_item.quantity % 1: #check if the number is integer or not
+        if movement_qty % 1: #check if the number is integer or not
             if not inventory_item.is_allowed_decimal_value():
-                raise exceptions.DecimalValueError(inventory_item, inventory_item.quantity)
+                raise exceptions.DecimalValueError(inventory_item, movement_qty)
         
         return True
 

@@ -23,6 +23,31 @@ class InventoryOrchestrator:
     """ 
 
     #############################
+    #    Permissions Methods    #
+    #############################
+
+    @staticmethod
+    def validate_user_is_active(user):
+        if not user.is_active:
+            raise exceptions.InactiveUser(user=user.username, op="movement_creation")
+
+
+    @staticmethod
+    def validate_movement_adjustment(movement_item, user):
+        if movement_item.correction_id:
+            if not user.has_perm('inventory.can_adjust_movement'):
+                raise exceptions.CannotAdjustMovement(user.username)
+
+    @staticmethod
+    def validate_can_create_movement():
+        """check if the user is a technician or an administrator.
+                - administrators can always create and adjust
+                - technician cannot adjust. They can only create if are LISTED on the report and it is OPEN
+        """
+        
+        pass
+            
+    #############################
     #    Validation Methods     #
     #############################
 
@@ -32,18 +57,14 @@ class InventoryOrchestrator:
         qty = movement_item.quantity
         try:
 
-            if not user.is_active:
-                raise exceptions.InactiveUser(user=user.username, op="movement_creation")
-
+            InventoryOrchestrator.validate_user_is_active(user)
             # Business Rule: If this is a correction, user MUST be a Supervisor
-            if movement_item.correction_id is not None:
-                if not user.has_perm('inventory.can_adjust_movement'):
-                    raise exceptions.CannotAdjustMovement(user.username)
+            InventoryOrchestrator.validate_movement_adjustment(movement_item, user)
             
             MovementServices.validate_movement_item(movement_item)
             InventoryServices.validate_stock_operation(inventory_item, qty)
-        except exceptions.InventoryError:
-            pass
+        except exceptions.InventoryError as e:
+            raise e
 
     #############################
     #    Application Methods    #
