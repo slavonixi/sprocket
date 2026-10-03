@@ -22,9 +22,9 @@ class InventoryOrchestrator:
             both the Movement item and the Inventory item.
     """ 
 
-    #############################
-    #    Permissions Methods    #
-    #############################
+    #########################################
+    #    Permissions Validation Methods     #
+    #########################################
 
     @staticmethod
     def validate_user_is_active(user):
@@ -37,6 +37,8 @@ class InventoryOrchestrator:
         if movement_item.correction_id:
             if not user.has_perm('inventory.can_adjust_movement'):
                 raise exceptions.CannotAdjustMovement(user.username)
+            else:
+                return True
 
     @staticmethod
     def validate_can_create_movement():
@@ -58,9 +60,10 @@ class InventoryOrchestrator:
         try:
 
             InventoryOrchestrator.validate_user_is_active(user)
+
             # Business Rule: If this is a correction, user MUST be a Supervisor
-            InventoryOrchestrator.validate_movement_adjustment(movement_item, user)
-            
+            InventoryOrchestrator.validate_movement_adjustment(movement_item, user) 
+                       
             MovementServices.validate_movement_item(movement_item)
             InventoryServices.validate_stock_operation(inventory_item, qty)
         except exceptions.InventoryError as e:
@@ -70,9 +73,9 @@ class InventoryOrchestrator:
     #    Application Methods    #
     #############################
 
+    @staticmethod
     def create_new_movement(inventory_item : Inventory, movement_item : Movement):
         with transaction.atomic():
             movement_qty = MovementServices.get_signed_qty(movement_item)
             InventoryServices.apply_to_stock(inventory_item.id, movement_qty)
             MovementServices.create_movement(movement_item)
-            

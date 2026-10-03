@@ -115,6 +115,7 @@ class Movement(models.Model):
         #CYCLE_COUNT      = "CYCLE_COUNT", "Cycle Count Adjustment"
         #DAMAGE_WRITE_OFF = "DAMAGE_WRITE_OFF", "Damage Write-Off"
         #INTERNAL_TRANSFER= "INTERNAL_TRANSFER", "Internal Transfer"
+        #ADJUSTMENT/CORRECTION
     # movement services and orchestrator must provide rules to handle operations
     # based on the operation type
     #operation_type = models.TextField(max_length=200) #NOT COMPLETED

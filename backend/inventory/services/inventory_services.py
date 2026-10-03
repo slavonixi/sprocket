@@ -150,8 +150,6 @@ class InventoryServices:
             raise e
         return True
 
-    def validate_item(inventory_item):
-        return True
 
 #**********************************************************************************************
 #**********************************************************************************************
@@ -196,11 +194,13 @@ class InventoryServices:
             )
             return result
 
+    @staticmethod
     def update_stock_value(inventory_id, old_qty, new_qty):
         delta = InventoryServices.get_delta(old_qty, new_qty)
         result = InventoryServices.apply_to_stock(inventory_id, delta)
         return result
 
+    @staticmethod
     def delete_stock(inventory_item):
         inventory_item.delete()
         return True
