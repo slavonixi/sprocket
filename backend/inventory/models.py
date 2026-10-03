@@ -1,6 +1,7 @@
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from django.core.validators import RegexValidator
+from core import settings
 import uuid
 
 class EAN13Field(models.CharField):
@@ -114,10 +115,32 @@ class Movement(models.Model):
         #CYCLE_COUNT      = "CYCLE_COUNT", "Cycle Count Adjustment"
         #DAMAGE_WRITE_OFF = "DAMAGE_WRITE_OFF", "Damage Write-Off"
         #INTERNAL_TRANSFER= "INTERNAL_TRANSFER", "Internal Transfer"
+        #ADJUSTMENT/CORRECTION
     # movement services and orchestrator must provide rules to handle operations
     # based on the operation type
     #operation_type = models.TextField(max_length=200) #NOT COMPLETED
-
+    correction_id = models.ForeignKey(
+        'self',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True
+    )
+    
+    # Audit fields for accountability
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, 
+        on_delete=models.PROTECT,
+        related_name='created_movements',
+        default=None,
+        null=True,
+        blank=True,
+    )
+    
     def get_inventory_item(self):
         return self.inventory_id
 
+    class Meta:
+        permissions = [
+            ("can_adjust_movement", _("Can create a correction movement")),
+        ]
+    

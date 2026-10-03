@@ -2,6 +2,16 @@ from rest_framework.exceptions import APIException #pyright: ignore
 from rest_framework import status #pyright: ignore
 from django.utils.translation import gettext_lazy as _
 
+#
+#
+#   FUTURE!
+#
+#   exceptions handler and human-readable text generator
+#
+#
+#
+#
+
 def buildMessage(*, status="failed", operation="not specified", code, **kwargs):
 
     data = {}
@@ -120,3 +130,34 @@ class UpdateOrDeleteIsForbidden(SerializerError):
             code = default_detail,
         )
         super().__init__(result)
+
+############################
+## Permissions exceptions ##
+############################
+
+class CannotAdjustMovement(InventoryError):
+    def __init__(self, user, op="adjust_movement"):
+        default_detail = self.default_detail+".CannotAdjustMovement"
+        data = {
+            'user': user
+        }
+        result = buildMessage(
+            operation=op,
+            code = default_detail,
+            **data
+        )
+        super().__init__(result)
+
+class InactiveUser(InventoryError):
+    def __init__(self, user, op="inventory_generic"):
+        default_detail = self.default_detail+".InactiveUser"
+        data = {
+            'user': user
+        }
+        result = buildMessage(
+            operation=op,
+            code = default_detail,
+            **data
+        )
+        super().__init__(result)
+

@@ -23,7 +23,7 @@ class MovementServices:
         """ Called by InventoryOrchestrator to let the serializer validate a 
             Movement item
         """
-        MovementServices.is_not_zero_or_negative(movement_item.qty)
+        MovementServices.is_not_zero_or_negative(movement_item.quantity)
         return True
 
     #########################
@@ -33,12 +33,12 @@ class MovementServices:
     def get_signed_qty(movement_item: Movement):
         """
             Tells if the value to apply to the stock is positive or negative
-            depending on operation_direction (inbound or outbound)
+            depends on operation_direction (inbound or outbound)
         """
         if movement_item.operation_direction == Movement.OperationDirection.INBOUND:
-            return movement_item.qty  #return positive qty
+            return movement_item.quantity  #return positive quantity
         elif movement_item.operation_direction == Movement.OperationDirection.OUTBOUND:
-            return -movement_item.qty #return negtive qty
+            return -movement_item.quantity #return negtive quantity
         else:
             raise exceptions.IllegalOperationValue(
                 op="movement_create", 
@@ -54,4 +54,4 @@ class MovementServices:
         movement_item.save()
         return movement_item
 
-    # DELETE AND UPDATE MOVEMENT IS FORBIDDEN
+    # DELETE AND UPDATE MOVEMENTs IS FORBIDDEN

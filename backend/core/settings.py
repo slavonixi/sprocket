@@ -31,6 +31,9 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
+# CUSTOM USERS
+AUTH_USER_MODEL = 'auth.User'
+
 
 # Application definition
 
