@@ -38,7 +38,8 @@ AUTH_USER_MODEL = 'auth.User'
 # Application definition
 
 INSTALLED_APPS = [
-    'api.apps.ApiConfig',
+    'report.apps.ReportConfig',
+    'administration.apps.AdministrationConfig',
     'inventory.apps.InventoryConfig',
     'rest_framework',
     'django_extensions',

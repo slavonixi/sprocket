@@ -5,28 +5,18 @@ from inventory.services.inventory_services import InventoryServices
 #from services.app_services import ServiceOrchestrator
 
 #   MODELS
-from .models import Report
-from .models import HR_records
-from .models import Customer_records
-from .models import Operation
-from .models import UsedMaterials
-from .models import Logs
-from .models import Machinery_records
+from report.models import Report
+from administration.models import HR_records
+from administration.models import Customer_records
+from report.models import Operation
+from report.models import UsedMaterials
+from administration.models import Machinery_records
 
 # EXTERNAL MODELS IMPORTATION (to delete)
 from inventory.models import Inventory
 from inventory.models import MeasureUnit
 from inventory.models import Inv_masterdata
 from inventory.models import Movement
-#########################################
-
-class LogsSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Logs
-        fields = [
-            "id",
-            "log_text",
-        ]
 
 class UsedMaterialsSerializer(serializers.ModelSerializer):
     
@@ -63,38 +53,16 @@ class UsedMaterialsSerializer(serializers.ModelSerializer):
             old_qta = self.instance.qta
             new_qta = data.get('qta')
             inventory_item = data.get('inventory_fk')
-            ServiceOrchestrator.validate_withdraw_update(inventory_item, old_qta, new_qta)     
+            #ServiceOrchestrator.validate_withdraw_update(inventory_item, old_qta, new_qta)     
 
         else:
             # Siamo in un CREATE (POST)
             inventory_item = data.get('inventory_fk')
             qta = data.get('qta')
             
-            ServiceOrchestrator.validate_inventory_withdraw(inventory_item, qta)        
+            #ServiceOrchestrator.validate_inventory_withdraw(inventory_item, qta)        
         return data
-     
-class Machinery_recordsSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Machinery_records
-        fields = [
-            "id",
-            "brand",
-            "model",
-        ]       
-        # extra_kwargs = {
-        #     'url': {'view_name': 'api:machinery_records-detail'}
-        # }
 
-# """
-# ****************************************************************************************
-#     |----OPERATION SERIALIZER DETAIL-----|
-
-#     An operation is a step of a report: it may be compose by 1 or even 100 operations.
-
-#     In OperationSerializer"Detail" every information and hypertext is provided
-
-#         #To add details | list ?
-# """
 class OperationSerializerDetail(serializers.ModelSerializer):
 
     report_fk = serializers.HyperlinkedRelatedField(
@@ -148,51 +116,6 @@ class OperationSerializerList(serializers.ModelSerializer):
             "desc",
             "report_fk",
         ]
-
-# """
-# ****************************************************************************************
-#     |----CUSTOMER RECORDS SERIALIZER-----|
-#     Just serialize customers (models.Customer_records)
-# """
-class Customer_recordsSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = Customer_records
-        fields = [
-            "id", 
-            "iva",
-            "desc",
-        ]
-
-# """
-# ****************************************************************************************
-#     |----HR_RECORDS SERIALIZER-----|
-#     Just serialize HR (models.HR_records)
-# """
-class HR_recordsSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = HR_records
-        fields = [
-            "name",
-            "surname",
-            "date_birth",
-        ]
-            # extra_kwargs = {
-            #     'url': {'view_name': 'api:hr_records-detail'}
-            # }
-
-
-# """
-# ****************************************************************************************
-    # |----REPORT SERIALIZER LIST-----|
-    # This serializer provide to return a list of reports with essential
-    # information
-# 
-    # Many fields are missing for avoid to overflow the payload
-# 
-    # More details are provided in ReportSerializerDetail 
-# """
 
 class ReportSerializerList(serializers.ModelSerializer):
 
