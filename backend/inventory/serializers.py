@@ -57,14 +57,8 @@ class MovementSerializer(serializers.ModelSerializer):
 
             request = self.context.get('request')
             user = request.user if request else None
-
-            movement_item = Movement(
-                inventory_id = data.get('inventory_id'),
-                operation_direction = data.get('operation_direction'),
-                quantity = data.get('quantity'),
-                correction_id = data.get('correction_id'),
-                created_by = data.get('created_by'),
-            )
+            movement_item = Movement(**data)
+            
             InventoryOrchestrator.validate_movement_create(
                 movement_item.inventory_id,
                 movement_item,
