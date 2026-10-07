@@ -178,7 +178,7 @@ class ReportSerializerDetail(serializers.ModelSerializer):
         source='involved_technicians_queryset', # HR_records method which provide technician urls
         many=True,
         read_only=True,
-        view_name='api:hr_records-detail'
+        view_name='administration:hr_records-detail'
     )
 
     class Meta:
@@ -194,5 +194,12 @@ class ReportSerializerDetail(serializers.ModelSerializer):
             "status",
         ]
 
-
-
+    def validate(self, data):
+        if self.instance:
+            pass
+        else:       #REPORT CREATION (POST)
+            request = self.context.get('request')
+            user = request.user if request else None
+            report_item = Report(**data)
+            ReportOrchestrator.validate_report_creation(report_item)
+            return data

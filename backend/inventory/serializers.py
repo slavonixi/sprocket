@@ -142,9 +142,9 @@ class InventorySerializerDetail(serializers.ModelSerializer):
         inv_masterdata = data.get('inv_masterdata')
         quantity = data.get('quantity')
         inventory_item = Inventory(
-                                    inv_masterdata=inv_masterdata, 
-                                    quantity=quantity                                    
-                                    )
+            inv_masterdata=inv_masterdata, 
+            quantity=quantity,                                    
+        )
         InventoryServices.validate_item(inventory_item)
         return data
     
