@@ -3,6 +3,7 @@ from django.db import models
 from django.utils.translation import gettext_lazy as _
 from django.core.validators import RegexValidator
 import uuid
+import datetime
 from inventory.models import Movement
 from inventory.models import Inventory
 from administration.models import HR_records
@@ -12,9 +13,32 @@ from administration.models import Machinery_records
 
 class Report(models.Model):
     class Report_status(models.TextChoices):
+        """
+            Report's status (v2)
+        """
+        # An admin is building a report. Only him can see it
         DRAFT = "DR", _("Draft")
+        # A report is open, but nobody is working on it
+        # atm and the tasks are not completed yet
         OPEN = "OP", _("Open")
+        # All the work is done. The administration 
+        # closes the report and then creates the invoice
         CLOSED = "CL", _("Closed")     
+        # A work can be cancelled, if it was created
+        # for mistake or the client is no longer interested 
+        CANCELLED = "CA", _("Cancelled")
+        # Technicians already completed some tasks, but the 
+        # work is suspended due to parts shortage for instance
+        HOLD_ON = "HO", _("Hold on")
+        # Technicians are already on the field
+        RUNNING = "RU", _("Running")
+        # Administration assigned technician and planned the
+        # operation (operation creation)
+        PLANNED = "PL", _("Planned")
+        # Technician has closed a report and admin has to
+        # approve the closure or re-open it
+        PENDING = "PE", _("Pending")
+
 
     report_id = models.UUIDField(
         primary_key=True, 
@@ -23,9 +47,19 @@ class Report(models.Model):
         help_text="ID univoco generato automaticamente (UUID4)"
     )
     desc = models.CharField(max_length=100)
-    customer_fk = models.ForeignKey(Customer_records, on_delete=models.CASCADE)
-    date_open = models.DateTimeField("date opened")
-    date_close = models.DateTimeField("date closed")
+    customer_fk = models.ForeignKey(Customer_records, on_delete=models.PROTECT)
+    date_open = models.DateTimeField(
+        _("date opened"),
+        default = None,
+        null = True,
+        blank = True,
+    )        
+    date_close = models.DateTimeField(
+        _("date closed"),
+        default = None,
+        null = True,
+        blank = True,
+    )
     #technicians = models.ManyToManyField(HR_records)   #spostato in Operation
     status = models.CharField(
         max_length = 2,

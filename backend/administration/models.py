@@ -30,7 +30,12 @@ class Customer_records(models.Model):
         editable=False,
         help_text="ID univoco generato automaticamente (UUID4)"
     )
-    iva = models.CharField(max_length=11)
+    iva = models.CharField(
+        max_length=11,
+        default = None,
+        null = True,
+        blank = True,
+    )
     desc = models.CharField(max_length=100)
 
     def __str__(self):
