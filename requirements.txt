@@ -10,3 +10,4 @@ structlog
 pytest
 pytest-django
 django-extensions
+drf-spectacular

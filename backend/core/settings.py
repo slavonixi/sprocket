@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'administration.apps.AdministrationConfig',
     'inventory.apps.InventoryConfig',
     'rest_framework',
+    'drf_spectacular',
     'django_extensions',
     'django_celery_results',
     'django.contrib.admin',
@@ -57,7 +58,16 @@ REST_FRAMEWORK = {
     # or allow read-only access for unauthenticated users.
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly"
-    ]
+    ],
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+
+}
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Sprocket API',
+    'DESCRIPTION': 'Detailed API documentation for my Django REST project',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
 }
 
 # CELERY
