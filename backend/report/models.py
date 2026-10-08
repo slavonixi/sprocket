@@ -14,10 +14,8 @@ from administration.models import Machinery_records
 class Report(models.Model):
     class Report_status(models.TextChoices):
         """
-            Report's status (v2)
+            Report's status (v3)
         """
-        # An admin is building a report. Only him can see it
-        DRAFT = "DR", _("Draft")
         # A report is open, but nobody is working on it
         # atm and the tasks are not completed yet
         OPEN = "OP", _("Open")
@@ -30,8 +28,6 @@ class Report(models.Model):
         # Technicians already completed some tasks, but the 
         # work is suspended due to parts shortage for instance
         HOLD_ON = "HO", _("Hold on")
-        # Technicians are already on the field
-        RUNNING = "RU", _("Running")
         # Technician has closed a report and admin has to
         # approve the closure or re-open it
         PENDING = "PE", _("Pending")
@@ -77,6 +73,19 @@ class Report(models.Model):
 #   report
 #
 class Operation(models.Model):
+    class Operation_status(models.TextChoices):
+        """
+            Operation's status (v1)
+        """
+        # An admin is building a report. Only him can see it
+        DRAFT = "DR", _("Draft")
+        # The operation is planned and technicians are assigned
+        PLANNED = "PL", ("Planned")
+        # The operation is done
+        FINISHED = "FI", ("Finished")
+        # Technicians are working on the field
+        RUNNING = "RU", ("Running")
+
     date = models.DateTimeField("operation's date")
     desc = models.CharField(max_length=500)
     report_fk = models.ForeignKey(Report, on_delete=models.CASCADE)
