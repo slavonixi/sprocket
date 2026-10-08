@@ -32,9 +32,6 @@ class Report(models.Model):
         HOLD_ON = "HO", _("Hold on")
         # Technicians are already on the field
         RUNNING = "RU", _("Running")
-        # Administration assigned technician and planned the
-        # operation (operation creation)
-        PLANNED = "PL", _("Planned")
         # Technician has closed a report and admin has to
         # approve the closure or re-open it
         PENDING = "PE", _("Pending")
