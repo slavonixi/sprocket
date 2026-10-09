@@ -3,6 +3,7 @@ from django.utils.translation import gettext_lazy as _
 from django.core.validators import RegexValidator
 import uuid
 from inventory.models import Movement
+from core import settings
 from inventory.models import Inventory
 # """
 # #                   **************************************************************
@@ -49,6 +50,9 @@ class HR_records(models.Model):
     name = models.CharField(max_length=50)
     surname = models.CharField(max_length=50)
     date_birth = models.DateField()
+    associated_user = models.OneToOneField(
+        settings.AUTH_USER_MODEL
+    )
     def __str__(self):
         return f"{self.name} {self.surname}"
 
