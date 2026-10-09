@@ -18,6 +18,17 @@ def api_rf():
     return APIRequestFactory()
 
 @pytest.fixture
+def supervisor_user(db):
+    user = User.objects.create_user(username="supervisor", is_active=True)
+    
+    # Assign custom permission
+    content_type = ContentType.objects.get_for_model(Movement)
+    perm = Permission.objects.get(codename="can_adjust_movement", content_type=content_type)
+    user.user_permissions.add(perm)
+    return user
+
+
+@pytest.fixture
 def clerk_user(db):
     """User WITHOUT supervisor permissions"""
     return User.objects.create_user(username="clerk", is_active=True)

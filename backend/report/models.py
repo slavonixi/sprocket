@@ -57,7 +57,7 @@ class Report(models.Model):
     status = models.CharField(
         max_length = 2,
         choices = Report_status,
-        default = Report_status.DRAFT,
+        default = Report_status.OPEN,
     )
 
     @property
@@ -88,17 +88,42 @@ class Operation(models.Model):
 
     date = models.DateTimeField("operation's date")
     desc = models.CharField(max_length=500)
-    report_fk = models.ForeignKey(Report, on_delete=models.CASCADE)
-    technician_fk = models.ManyToManyField(HR_records)
+    report_fk = models.ForeignKey(
+        Report, 
+        on_delete=models.PROTECT,
+        blank=True,
+        null=True,
+        default=None,
+    )
+    technician_fk = models.ManyToManyField(
+        HR_records,
+        blank=True,
+        default=None,
+    )
+
+    status = models.CharField(
+        max_length = 2,
+        choices = Operation_status,
+        default = Operation_status.DRAFT,
+    )
+
+    created_by = models.ForeignKey(HR_records, on_delete=PROTECT)
+
 
     @property
     def involved_materials_queryset(self):
-        # Usiamo 'self' perché siamo dentro il modello
         return Inventory.objects.filter(usedmaterials__operation_fk=self).distinct()
 
 
     def __str__(self):
         return self.desc
+
+    class Meta:
+        permissions = [
+            ("can_plan_operations", _("Can assign technician or create draft operations")),
+            ("can_run_operations", _("Can start an operation")),
+        ]
+        
 
 class UsedMaterials(models.Model):
 

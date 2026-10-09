@@ -21,6 +21,11 @@ class ReportError(APIException):
     status_code = status.HTTP_400_BAD_REQUEST
     default_detail = 'Exception.Report'
 
+class OperationError(APIException):
+    """Parent class for the operations errors"""
+    status_code = status.HTTP_400_BAD_REQUEST
+    default_detail = 'Exception.Operation'
+
 class IllegalReportStatus(ReportError):
     """
         report cannot be in this status at the moment
@@ -60,6 +65,49 @@ class CustomerIsNone(ReportError):
     def __init__(self, op='report_edit_or_create'):
         result = buildMessage(
             operation=op,
-            code = self.default_detail+'CustomerIsNone',
+            code = self.default_detail+'.CustomerIsNone',
         )
         super().__init__(result)
+
+
+
+############################
+#    OPERATION ERRORS      #
+############################
+
+class IllegalOperationStatus(OperationError):
+    """
+        operation instance cannot be in this status at the moment
+    """
+    def __init__(self, illegal_status, op='operation_edit_or_create'):
+        data = {
+            'status' : illegal_status
+        }
+        result = buildMessage(
+            operation=op,
+            code = self.default_detail+'.IllegalOperationStatus',
+            **data
+        )
+        super().__init__(result)
+
+class TechniciansRequired(OperationError):
+    """
+        Technicians are not set, but they should be assigned at this task
+    """
+    def __init__(self, op='operation_edit_or_create'):
+        result = buildMessage(
+            operation=op,
+            code = self.default_detail+'.TechniciansRequired',
+        )
+        super().__init__(result)
+
+class PermissionDenied(OperationError):
+    """
+     You missing the permissions to perform an action 
+    """
+    def __init__(self, op='operation_edit_or_create'):
+        result = buildMessage(
+            operation=op,
+            code = self.default_detail+'.PermissionDenied',
+        )
+        super().__init__(result)    

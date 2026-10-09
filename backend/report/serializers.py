@@ -1,8 +1,7 @@
 from django.contrib.auth.models import User # pyright: ignore[reportMissingModuleSource]
 from rest_framework import serializers # pyright: ignore[reportMissingImports, reportMissingModuleSource]
 
-from inventory.services.inventory_services import InventoryServices
-#from services.app_services import ServiceOrchestrator
+from report.services.report_orchestrator import ReportOrchestrator
 
 #   MODELS
 from report.models import Report
@@ -94,6 +93,20 @@ class OperationSerializerDetail(serializers.ModelSerializer):
             "technician_fk",
             "involved_materials",
         ]
+
+    def validate(self, data):
+        if self.instance:       # PUT / PATCH
+            pass
+        else:                   # POST (creation)
+            # get the user
+            request = self.context.get('request')
+            user = request.user if request else None
+            # create the operation instance
+            operation_instance = Operation(
+                **data,
+            )
+            # validate the input via the orchestrator
+            ReportOrchestrator.validate_create_operation(user, operation_instance)
         
 # """
 # ****************************************************************************************
