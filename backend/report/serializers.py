@@ -17,6 +17,12 @@ from inventory.models import MeasureUnit
 from inventory.models import Inv_masterdata
 from inventory.models import Movement
 
+
+#****#########################***********************************************************
+#****#  DETAIL SERIALIZERS   #***********************************************************
+#****#########################***********************************************************
+
+
 class UsedMaterialsSerializer(serializers.ModelSerializer):
     
     operation_fk = serializers.HyperlinkedRelatedField(
@@ -107,62 +113,14 @@ class OperationSerializerDetail(serializers.ModelSerializer):
             )
             # validate the input via the orchestrator
             ReportOrchestrator.validate_create_operation(user, operation_instance)
-        
-# """
-# ****************************************************************************************
-#     |----OPERATION SERIALIZER ***LIST***-----|
+    
 
     
-#         (not return only technicians)
-# """
-class OperationSerializerList(serializers.ModelSerializer):
-    report_fk = serializers.HyperlinkedRelatedField(
-        queryset = Report.objects.all(),    
-        view_name='api:report-detail', # Deve corrispondere al nome nel router    
-    )
-
-    class Meta:
-        model = Operation
-        fields = [
-            "id", 
-            "date",
-            "desc",
-            "report_fk",
-        ]
-
-class ReportSerializerList(serializers.ModelSerializer):
-
-    customer_fk = serializers.HyperlinkedRelatedField(
-        view_name = "api:customer_records-detail",
-        read_only = True,
-    )
-
-    class Meta:
-        model = Report
-        fields = [
-            "report_id",
-            "desc",
-            "customer_fk",
-            "date_open",
-            "date_close",
-            "status",
-        ]
-
-# 
-# ****************************************************************************************
-#     |----REPORT SERIALIZER DETAIL-----|
-
-#     is used when an action different from "get list" is sent.
-
-#     It adds the following information:
-#         -involved operations (read only - its not a field)
-#         -involved technicians (read only - its not a field)
-#         - ***ANY OTHER FIELDS WILL BE DEPLOY*** 
-
-
-    
-# 
 class ReportSerializerDetail(serializers.ModelSerializer):
+    """
+        Provide Report's details and extra-fields for
+        dashboard visualization. Read-only
+    """
 #    
 #    owner = serializers.ReadOnlyField(source="owner.username")
 #        eventually develop a technician who owns a report (r u d)
@@ -175,7 +133,7 @@ class ReportSerializerDetail(serializers.ModelSerializer):
         view_name='api:customer_records-detail', 
         queryset=Customer_records.objects.all(),
     )
-
+    
     involved_operations = serializers.HyperlinkedRelatedField(
         many=True,
         read_only=True,
@@ -207,12 +165,69 @@ class ReportSerializerDetail(serializers.ModelSerializer):
             "status",
         ]
 
+
+
+
+
+
+#****#########################***********************************************************
+#****#    LIST SERIALIZERS   #***********************************************************
+#****#########################***********************************************************
+
+class ReportSerializer(serializers.ModelSerializer):
+    """
+        For list views or POST (report creation, without operations)
+    """
+
+    class Meta:
+        model = Report
+        fields = [
+            "report_id",
+            "desc",
+            "customer_fk",
+            "date_open",
+            "date_close",
+            "status",
+        ]
+    
     def validate(self, data):
-        if self.instance:
-            pass
-        else:       #REPORT CREATION (POST)
-            request = self.context.get('request')
-            user = request.user if request else None
-            report_item = Report(**data)
-            ReportOrchestrator.validate_report_creation(report_item)
-            return data
+        if not self.instance:
+            ReportOrchestrator.validate_create_report()
+
+
+class ReportAndOperationCreateSerializer(serializer.ModelSerializer):
+    """
+        For report + first operation creation, write-only\n
+        OperationSerializer nested
+    """
+    initial_operation = OperationSerializer(
+        write_only=True, 
+        required=False, 
+        allow_null=True,
+    )
+    
+    class Meta:
+        model = Report
+        fields = [
+            "report_id",
+            "desc",
+            "customer_fk",
+            "date_open",
+            "date_close",
+            "status",
+            "initial_operation",    # Operation object           
+        ]
+
+class OperationSerializer(serializers.ModelSerializer):
+
+    
+
+    class Meta:
+        model = Operation
+        fields = [
+            "id", 
+            "date",
+            "desc",
+            "report_fk",
+            "customer_id",
+        ]

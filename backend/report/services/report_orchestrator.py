@@ -8,26 +8,35 @@ from django.db import transaction
 from report.models import Operation, Report
 
 # EXCEPTIONS
-from report.exceptions import PermissionDenied
+from report.exceptions import (
+    PermissionDenied,
+    IllegalReportStatus,
+)
 
 class ReportOrchestrator:
+
+    REPORT_INITIAL_STATUS = (
+        Report.Report_status.DRAFT,
+        Report.Report_status.OPEN,
+    )
 
     #########################################
     #    Permissions Validation Methods     #
     #########################################
 
-    def can_start_operation(user, operation_instance):
-        if operation_instance.status == Operation.Operation_status.RUNNING:
-            if not user.has_perm('report.can_run_operations'):
-                raise PermissionDenied(op='run_operation')
-        return True
-
-    def can_plan_operations(user, operation_instance):
-        if operation_instance.status in OperationServices.PLANNING_STATUS:
-            if not user.has_perm('report.can_plan_operations'):
-                raise PermissionDenied(op='plan_operation')
-        return True
-        
+    @staticmethod
+    def is_report_initial_status_valid(user, report_instance):
+        status = report_instance.status
+        # check if the status is in the valid initial status
+        if status in ReportOrchestrator.REPORT_INITIAL_STATUS:
+            # the status is valid, but we have to check
+            # if the user can 'draft' a report
+            if not user.has_perm('report.can_draft_report'):
+                if status is Report.Report_status.DRAFT:
+                    raise PermissionDenied('draft_report')
+            return True
+        else:
+            raise IllegalReportStatus(status)
 
     #########################
     #  VALIDATION METHODS   #
@@ -50,6 +59,10 @@ class ReportOrchestrator:
         ReportOrchestrator.can_start_operation(user, operation_instance)
         return True
 
+    @staticmethod
+    def validate_create_report(user, report_instance):
+        ReportOrchestrator.is_report_initial_status_valid(user, report_instance)
+        ReportServices.validate_new_report_instance(report_instance)
 
     #########################
     #  APPLICATION METHODS  #

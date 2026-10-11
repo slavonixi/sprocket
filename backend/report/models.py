@@ -14,8 +14,11 @@ from administration.models import Machinery_records
 class Report(models.Model):
     class Report_status(models.TextChoices):
         """
-            Report's status (v3)
+            Report's status (v4)
         """
+        # When an administrator creates a Report with no
+        # PLANNED Operations, it has to be a DRAFT
+        DRAFT = "DR", _("Draft")
         # A report is open, but nobody is working on it
         # atm and the tasks are not completed yet
         OPEN = "OP", _("Open")
@@ -67,6 +70,12 @@ class Report(models.Model):
     
     def __str__(self):
         return self.desc
+
+    class Meta:
+        permissions = [
+            ("can_draft_report", _("Can draft reports")),
+        ]
+
 
 #                   **************************************************************
 #   Operation contains every single operation that will appear in the 

@@ -32,7 +32,7 @@ class IllegalReportStatus(ReportError):
     """
     def __init__(self, illegal_status, op='report_edit_or_create'):
         data = {
-            'status' : illegal_status
+            'illegal_status' : illegal_status
         }
         result = buildMessage(
             operation=op,
