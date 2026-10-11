@@ -41,7 +41,7 @@ class IllegalReportStatus(ReportError):
         )
         super().__init__(result)
 
-class IllegalDateField(ReportError):
+class DateError(ReportError):
     """
         date open and date close must follow these rules:
             - date close must be None on creation

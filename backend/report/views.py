@@ -1,11 +1,13 @@
 from report import models
 from rest_framework import generics
 from django.contrib.auth.models import User
-from report.serializers import ReportSerializerList
-from report.serializers import ReportSerializerDetail
-from report.serializers import OperationSerializerList
-from report.serializers import OperationSerializerDetail
-from report.serializers import UsedMaterialsSerializer
+from report.serializers import (
+    ReportSerializer,
+    ReportSerializerDetail,
+    ReportAndOperationCreateSerializer,
+    OperationSerializer,
+    UsedMaterialsSerializer,
+)
 
 from core.permissions import IsOwnerOrReadOnly
 
@@ -41,7 +43,7 @@ class UsedMaterialsViewSet(viewsets.ModelViewSet):
         inventory_id = serializer.validated_data['inventory_fk'].id
         old_quantity = self.get_object().qta
         new_quantity = serializer.validated_data.get('qta')
-        
+
         #ServiceOrchestrator.update_withdraw(inventory_id, old_quantity, new_quantity) #orchestrator
         serializer.save()
 
@@ -57,14 +59,14 @@ class OperationViewSet(viewsets.ModelViewSet):
     """
     This viewset automatically provides `list` and `retrieve` actions.
     """
-    
-    def get_serializer_class(self):
-         if self.action == 'list':
-            return OperationSerializerList
-         return OperationSerializerDetail
-    
+
+    # def get_serializer_class(self):
+    #      if self.action == 'list':
+    #         return OperationSerializerList
+    #      return OperationSerializerDetail
+
     queryset = models.Operation.objects.all()
-    #serializer_class = OperationSerializer
+    serializer_class = OperationSerializer
     permission_classes = [permissions.IsAuthenticated]
 
 class ReportViewSet(viewsets.ModelViewSet):
@@ -80,7 +82,7 @@ class ReportViewSet(viewsets.ModelViewSet):
                 # thus technicians must start an operation
                 if 'initial_operation' not in self.request.data:
                     # if they are not creating an operation, raise an exception
-                    raise PermissionDenied(op='create_report')       
+                    raise PermissionDenied(op='create_report')
                 return ReportCreateWithOperationSerializer
             # in this case the user is an admin
             # if the admin put operation's data he creates report + first operation (PLANNED status)
@@ -88,7 +90,7 @@ class ReportViewSet(viewsets.ModelViewSet):
                 return ReportCreateWithOperationSerializer
             # Otherwise he's going to create a void report
             return ReportSerializer
-            
+
         return ReportSerializer
 
     queryset = models.Report.objects.all()

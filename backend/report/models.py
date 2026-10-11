@@ -22,13 +22,13 @@ class Report(models.Model):
         # A report is open, but nobody is working on it
         # atm and the tasks are not completed yet
         OPEN = "OP", _("Open")
-        # All the work is done. The administration 
+        # All the work is done. The administration
         # closes the report and then creates the invoice
-        CLOSED = "CL", _("Closed")     
+        CLOSED = "CL", _("Closed")
         # A work can be cancelled, if it was created
-        # for mistake or the client is no longer interested 
+        # for mistake or the client is no longer interested
         CANCELLED = "CA", _("Cancelled")
-        # Technicians already completed some tasks, but the 
+        # Technicians already completed some tasks, but the
         # work is suspended due to parts shortage for instance
         HOLD_ON = "HO", _("Hold on")
         # Technician has closed a report and admin has to
@@ -37,8 +37,8 @@ class Report(models.Model):
 
 
     report_id = models.UUIDField(
-        primary_key=True, 
-        default=uuid.uuid4, 
+        primary_key=True,
+        default=uuid.uuid4,
         editable=False,
         help_text="ID univoco generato automaticamente (UUID4)"
     )
@@ -49,7 +49,7 @@ class Report(models.Model):
         default = None,
         null = True,
         blank = True,
-    )        
+    )
     date_close = models.DateTimeField(
         _("date closed"),
         default = None,
@@ -67,7 +67,7 @@ class Report(models.Model):
     def involved_technicians_queryset(self):
         # Usiamo 'self' perché siamo dentro il modello
         return HR_records.objects.filter(operation__report_fk=self).distinct()
-    
+
     def __str__(self):
         return self.desc
 
@@ -76,9 +76,8 @@ class Report(models.Model):
             ("can_draft_report", _("Can draft reports")),
         ]
 
-
 #                   **************************************************************
-#   Operation contains every single operation that will appear in the 
+#   Operation contains every single operation that will appear in the
 #   report
 #
 class Operation(models.Model):
@@ -98,7 +97,7 @@ class Operation(models.Model):
     date = models.DateTimeField("operation's date")
     desc = models.CharField(max_length=500)
     report_fk = models.ForeignKey(
-        Report, 
+        Report,
         on_delete=models.PROTECT,
         blank=True,
         null=True,
@@ -108,6 +107,7 @@ class Operation(models.Model):
         HR_records,
         blank=True,
         default=None,
+        related_name='technician_operations',
     )
 
     status = models.CharField(
@@ -116,7 +116,11 @@ class Operation(models.Model):
         default = Operation_status.DRAFT,
     )
 
-    created_by = models.ForeignKey(HR_records, on_delete=PROTECT)
+    created_by = models.ForeignKey(
+        HR_records,
+        on_delete=models.PROTECT,
+        related_name='created_operations',
+    )
 
 
     @property
@@ -132,7 +136,7 @@ class Operation(models.Model):
             ("can_plan_operations", _("Can assign technician or create draft operations")),
             ("can_run_operations", _("Can start an operation")),
         ]
-        
+
 
 class UsedMaterials(models.Model):
 

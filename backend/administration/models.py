@@ -26,8 +26,8 @@ from inventory.models import Inventory
 #
 class Customer_records(models.Model):
     id = models.UUIDField(
-        primary_key=True, 
-        default=uuid.uuid4, 
+        primary_key=True,
+        default=uuid.uuid4,
         editable=False,
         help_text="ID univoco generato automaticamente (UUID4)"
     )
@@ -41,7 +41,7 @@ class Customer_records(models.Model):
 
     def __str__(self):
         return self.desc
-    
+
 #                   **************************************************************
 #   HR_records contains the human resources of the company.
 #
@@ -51,7 +51,8 @@ class HR_records(models.Model):
     surname = models.CharField(max_length=50)
     date_birth = models.DateField()
     associated_user = models.OneToOneField(
-        settings.AUTH_USER_MODEL
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
     )
     def __str__(self):
         return f"{self.name} {self.surname}"
@@ -66,7 +67,7 @@ class HR_records(models.Model):
 
 
 #                   **************************************************************
-#   Machinery_records contains every machinery 
+#   Machinery_records contains every machinery
 #   to which manuteneur is carried out by the company
 #
 class Machinery_records(models.Model):
@@ -80,7 +81,7 @@ class Machinery_records(models.Model):
 
 
 class Logs(models.Model):
-    
+
     log_text = models.TextField()
 
    # id_masterdata (PK): Identificatore univoco (UUID o Int).

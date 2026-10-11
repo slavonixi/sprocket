@@ -194,8 +194,21 @@ class ReportSerializer(serializers.ModelSerializer):
         if not self.instance:
             ReportOrchestrator.validate_create_report()
 
+class OperationSerializer(serializers.ModelSerializer):
 
-class ReportAndOperationCreateSerializer(serializer.ModelSerializer):
+    
+
+    class Meta:
+        model = Operation
+        fields = [
+            "id", 
+            "date",
+            "desc",
+            "report_fk",
+            "customer_id",
+        ]
+
+class ReportAndOperationCreateSerializer(serializers.ModelSerializer):
     """
         For report + first operation creation, write-only\n
         OperationSerializer nested
@@ -218,16 +231,4 @@ class ReportAndOperationCreateSerializer(serializer.ModelSerializer):
             "initial_operation",    # Operation object           
         ]
 
-class OperationSerializer(serializers.ModelSerializer):
 
-    
-
-    class Meta:
-        model = Operation
-        fields = [
-            "id", 
-            "date",
-            "desc",
-            "report_fk",
-            "customer_id",
-        ]
