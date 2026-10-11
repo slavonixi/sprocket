@@ -1,6 +1,6 @@
 # SERVICES
-from report.services.operation_services import OperationServices 
-from report.services.report_services import ReportServices 
+from report.services.operation_services import OperationServices
+from report.services.report_services import ReportServices
 from django.db import transaction
 
 
@@ -8,10 +8,7 @@ from django.db import transaction
 from report.models import Operation, Report
 
 # EXCEPTIONS
-from report.exceptions import (
-    PermissionDenied,
-    IllegalReportStatus,
-)
+from core.exceptions import BusinessLogicError
 
 class ReportOrchestrator:
 
@@ -41,7 +38,7 @@ class ReportOrchestrator:
     #########################
     #  VALIDATION METHODS   #
     #########################
-    
+
 
     @staticmethod
     def validate_create_operation(user, operation_instance):
@@ -55,7 +52,7 @@ class ReportOrchestrator:
         OperationServices.validate_operation_instance(operation_instance)
         # if is a planning, check if is an admin
         ReportOrchestrator.can_plan_operations(user, operation_instance)
-        # if is a starting, check if is a technician 
+        # if is a starting, check if is a technician
         ReportOrchestrator.can_start_operation(user, operation_instance)
         return True
 
@@ -74,8 +71,6 @@ class ReportOrchestrator:
         operation_instance.created_by = user
 
         with transaction.atomic():
-             
+
             # report creation  logic
             OperationServices.create_operation(user, operation_instance)
-
-            

@@ -1,11 +1,9 @@
-from inventory import exceptions
+from core.exceptions import BusinessLogicError
 from django.db import transaction
 from inventory.models import Inventory
 from inventory.models import Inv_masterdata
 from inventory.models import MeasureUnit
 import logging
-from rest_framework.exceptions import APIException # pyright: ignore
-
 logger = logging.getLogger('django')
 
 class InventoryServices:
@@ -13,20 +11,20 @@ class InventoryServices:
     @staticmethod
     def debug(inv_id):
         return "InventoryServices tied"
-    
+
 #**********************************************************************************************
 #**********************************************************************************************
 #**********************************************************************************************
 
-    #   
-    #   Utility methods handle miscellaneous tasks by offering 
+    #
+    #   Utility methods handle miscellaneous tasks by offering
     #   ready-made logic for operations like constructing intricate
     #   function responses.
     #
     #
     #
     #
-    # 
+    #
 
     #  | UTILS METHODS |
     #  | UTILS METHODS |
@@ -55,7 +53,7 @@ class InventoryServices:
                     "symbol": measure_unit.symbol,       # Es: "kg" o "pz" [2]
                     "name": measure_unit.name            # Es: "Kilogrammo" [2]
                 }
-            }            
+            }
         }
         return result
 
@@ -63,11 +61,11 @@ class InventoryServices:
     def get_delta(old_qty, new_qty):
         delta = old_qty - new_qty
         return delta
-    
+
     @staticmethod
     def compare_qty(qty1, qty2):
         if qty1 == qty2:
-            raise exceptions.NoChangeDetectedInUpdate(qty1)
+            raise BusinessLogicError('quantities must be different')
         return True
 
     @staticmethod
@@ -77,10 +75,10 @@ class InventoryServices:
 
            In some operations, negative values are forbidden.
            Zero values are forbidden in every operation.
-        
+
         """
         if qty <= 0:
-            raise exceptions.NegativeOrZeroError(qty)
+            raise BusinessLogicError("quantity can't be < 0")
 
     @staticmethod
     def check_decimal(inventory_item, movement_qty):
@@ -89,26 +87,23 @@ class InventoryServices:
                  (pieces cannot be decimal)
                  10.4 kg is a regular value
         """
-        
+
         if movement_qty % 1: #check if the number is integer or not
             if not inventory_item.is_allowed_decimal_value():
-                raise exceptions.DecimalValueError(inventory_item, movement_qty)
-        
+                raise BusinessLogicError("The measure unit don't allow decimal values")
+
         return True
 
-    @staticmethod    
+    @staticmethod
     def is_sufficient(inventory_item, qta_to_remove):
         """Check if there are enough items to withdraw.
-        
+
            !!! Always take a positive qta_to_remove !!!
         """
         if inventory_item.quantity < qta_to_remove:
-            raise exceptions.InsufficientStockError(
-                qta_to_remove, 
-                inventory_item,
-            )  
+            raise BusinessLogicError("The stock is insufficient: {inventory_item.quantity}")
         return True
-    
+
 #**********************************************************************************************
 #**********************************************************************************************
 #**********************************************************************************************
@@ -117,13 +112,13 @@ class InventoryServices:
 
 
     #   Validation methods perform checks to every item that has
-    #   to enter or exit the inventory. 
-    # 
+    #   to enter or exit the inventory.
+    #
     #   They don't apply any changes at the models.
     #
     #   Trigger exceptions when irregularity occours.
     #
-    # 
+    #
 
     #  | VALIDATION METHODS |
     #  | VALIDATION METHODS |
@@ -139,15 +134,12 @@ class InventoryServices:
         """
             Check if a movement create operation is valid and match inventory's rules
         """
-        try:    
-            #movement_qty must be != 0
-            InventoryServices.is_not_zero(movement_qty)      
-            #check if decimal values are accepted for this item
-            InventoryServices.check_decimal(inventory_item, movement_qty)
-            if movement_qty < 0: #if the movement is an outbound operation check if the stock is sufficient
-                InventoryServices.is_sufficient(inventory_item, movement_qty)
-        except exceptions.InventoryError as e:
-            raise e
+        #movement_qty must be != 0
+        InventoryServices.is_not_zero(movement_qty)
+        #check if decimal values are accepted for this item
+        InventoryServices.check_decimal(inventory_item, movement_qty)
+        if movement_qty < 0: #if the movement is an outbound operation check if the stock is sufficient
+            InventoryServices.is_sufficient(inventory_item, movement_qty)
         return True
 
 
@@ -155,7 +147,7 @@ class InventoryServices:
 #**********************************************************************************************
 #**********************************************************************************************
     #
-    #  Service methods apply the final changes to inventory model. 
+    #  Service methods apply the final changes to inventory model.
     #  In most of cases, they are called by the orchestrator class:
     #   AppServices
     #
@@ -172,20 +164,17 @@ class InventoryServices:
         return inventory_item
 
     @staticmethod
-    def apply_to_stock(inventory_id, qty): 
+    def apply_to_stock(inventory_id, qty):
         """
         add the qty value of an inventory element. It performs a stock
         availability check to avoid 'critical race' issues.
-            
+
         """
         with transaction.atomic():
             inventory_item = Inventory.objects.select_for_update().get(id=inventory_id)
             if qty < 0: #if true -> withdraw | if false -> restore
-                try:
-                    InventoryServices.is_sufficient(inventory_item, -qty)
-                except exceptions.InsufficientStockError as e:
-                    raise e
-            inventory_item.quantity += qty 
+                InventoryServices.is_sufficient(inventory_item, -qty)
+            inventory_item.quantity += qty
             inventory_item.save()
             result = InventoryServices.create_return_response(
                 operation = "InventoryServices.apply_to_stock",

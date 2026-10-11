@@ -1,6 +1,7 @@
 from inventory.services.inventory_services import InventoryServices
 from inventory.services.movement_services import MovementServices
-from inventory import exceptions
+from core.exceptions import BusinessLogicError
+
 from django.db import transaction
 from administration import tasks
 from celery import Celery
@@ -10,7 +11,6 @@ import sys
 #models
 from inventory.models import Inventory
 from inventory.models import Movement
-from rest_framework.exceptions import APIException #type: ignore
 
 class InventoryOrchestrator:
     """It able API to performs operation through Inventory and Movement models.
@@ -18,9 +18,9 @@ class InventoryOrchestrator:
 
         VALIDATIONS:
             validations methods are called separately by serializers validate()
-            built-in method. Often operations needs to validate the status of  
+            built-in method. Often operations needs to validate the status of
             both the Movement item and the Inventory item.
-    """ 
+    """
 
     #########################################
     #    Permissions Validation Methods     #
@@ -29,14 +29,14 @@ class InventoryOrchestrator:
     @staticmethod
     def validate_user_is_active(user):
         if not user.is_active:
-            raise exceptions.InactiveUser(user=user.username, op="movement_creation")
+            raise BusinessLogicError("User is not active")
 
 
     @staticmethod
     def validate_movement_adjustment(movement_item, user):
         if movement_item.correction_id:
             if not user.has_perm('inventory.can_adjust_movement'):
-                raise exceptions.CannotAdjustMovement(user.username)
+                raise BusinessLogicError("The user hasn't the permission to adjust a movement")
             else:
                 return True
 
@@ -46,9 +46,9 @@ class InventoryOrchestrator:
                 - administrators can always create and adjust
                 - technician cannot adjust. They can only create if are LISTED on the report and it is OPEN
         """
-        
+
         pass
-            
+
     #############################
     #    Validation Methods     #
     #############################
@@ -57,17 +57,12 @@ class InventoryOrchestrator:
     def validate_movement_create(inventory_item : Inventory, movement_item : Movement, *, user):
 
         qty = movement_item.quantity
-        try:
-
-            InventoryOrchestrator.validate_user_is_active(user)
+        InventoryOrchestrator.validate_user_is_active(user)
 
             # Business Rule: If this is a correction, user MUST be a Supervisor
-            InventoryOrchestrator.validate_movement_adjustment(movement_item, user) 
-                       
-            MovementServices.validate_movement_item(movement_item)
-            InventoryServices.validate_stock_operation(inventory_item, qty)
-        except exceptions.InventoryError as e:
-            raise e
+        InventoryOrchestrator.validate_movement_adjustment(movement_item, user)
+        MovementServices.validate_movement_item(movement_item)
+        InventoryServices.validate_stock_operation(inventory_item, qty)
 
     #############################
     #    Application Methods    #

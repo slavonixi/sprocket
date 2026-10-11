@@ -1,7 +1,6 @@
-from inventory import exceptions
+from core.exceptions import BusinessLogicError
 from django.db import transaction
 from inventory.models import Movement
-from rest_framework.exceptions import APIException # pyright: ignore
 
 
 class MovementServices:
@@ -16,11 +15,11 @@ class MovementServices:
         if qty > 0:
             return True
         else:
-            raise exceptions.MovementQtyIsZeroOrNegativeError()
+            raise BusinessLogicError("The quantity must be > 0")
 
     @staticmethod
     def validate_movement_item(movement_item):
-        """ Called by InventoryOrchestrator to let the serializer validate a 
+        """ Called by InventoryOrchestrator to let the serializer validate a
             Movement item
         """
         MovementServices.is_not_zero_or_negative(movement_item.quantity)
@@ -40,10 +39,7 @@ class MovementServices:
         elif movement_item.operation_direction == Movement.OperationDirection.OUTBOUND:
             return -movement_item.quantity #return negtive quantity
         else:
-            raise exceptions.IllegalOperationValue(
-                op="movement_create", 
-                illegal_value=movement_item.operation_direction
-            )
+            raise BusinessLogicError("Movement.direction is invalid")
 
     #########################
     ## Application methods ##

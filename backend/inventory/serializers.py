@@ -1,6 +1,6 @@
 from django.contrib.auth.models import User # pyright: ignore[reportMissingModuleSource]
 from rest_framework import serializers # pyright: ignore[reportMissingImports, reportMissingModuleSource]
-from inventory import exceptions
+from core.exceptions import BusinessLogicError
 #######################
 # Models importations #
 #######################
@@ -37,7 +37,7 @@ class MeasureUnitSerializer(serializers.ModelSerializer):
 class MovementSerializer(serializers.ModelSerializer):
 
     inventory_id = serializers.PrimaryKeyRelatedField(
-        queryset = Inventory.objects.all(),    
+        queryset = Inventory.objects.all(),
     )
     class Meta:
         model = Movement
@@ -51,14 +51,14 @@ class MovementSerializer(serializers.ModelSerializer):
         ]
 
     def validate(self, data):
-        if self.instance:   #PUT/PATCH (update) - FORBIDDEN 
-            raise exceptions.UpdateOrDeleteIsForbidden
+        if self.instance:   #PUT/PATCH (update) - FORBIDDEN
+            raise BusinessLogicError("Updating a Movement is forbidden")
         else:               #POST (create)
 
             request = self.context.get('request')
             user = request.user if request else None
             movement_item = Movement(**data)
-            
+
             InventoryOrchestrator.validate_movement_create(
                 movement_item.inventory_id,
                 movement_item,
@@ -66,16 +66,16 @@ class MovementSerializer(serializers.ModelSerializer):
             )
         return data
 
-#######################################                 
+#######################################
 ########## Inv_masterdataSerializer ###
 #######################################
 
 class Inv_masterdataSerializer(serializers.ModelSerializer):
-    
+
     measureUnit = serializers.PrimaryKeyRelatedField(
         queryset = MeasureUnit.objects.all()
     )
-    
+
     class Meta:
         model = Inv_masterdata
         fields = [
@@ -84,7 +84,7 @@ class Inv_masterdataSerializer(serializers.ModelSerializer):
             "desc",
             "measureUnit",
             "price",
-            "measure_value",   
+            "measure_value",
         ]
 
 #######################################
@@ -92,17 +92,17 @@ class Inv_masterdataSerializer(serializers.ModelSerializer):
 #######################################
 
 class InventorySerializerList(serializers.ModelSerializer):
-    
+
     measureUnit = serializers.SerializerMethodField(read_only=True)
 
     inv_masterdata = serializers.PrimaryKeyRelatedField(
-        queryset = Inv_masterdata.objects.all(),    
+        queryset = Inv_masterdata.objects.all(),
     )
 
     desc = serializers.CharField(source="inv_masterdata.desc", read_only = True)
 
 
-    class Meta: 
+    class Meta:
         model = Inventory
         fields = [
             "id",
@@ -116,20 +116,20 @@ class InventorySerializerList(serializers.ModelSerializer):
         ]
 
     def get_measureUnit(self, obj):
-        
+
         # [1] Il campo nel modello si chiama 'measure'
         unit = obj.inv_masterdata.measureUnit.symbol
         return unit
-    
 
-#######################################    
+
+#######################################
 ########## InventorySerializerDetail ##
 #######################################
 
 class InventorySerializerDetail(serializers.ModelSerializer):
     inv_masterdata = serializers.PrimaryKeyRelatedField(
-        queryset = Inv_masterdata.objects.all(),    
-    )    
+        queryset = Inv_masterdata.objects.all(),
+    )
     class Meta:
         model = Inventory
         fields = [
@@ -142,12 +142,12 @@ class InventorySerializerDetail(serializers.ModelSerializer):
         inv_masterdata = data.get('inv_masterdata')
         quantity = data.get('quantity')
         inventory_item = Inventory(
-            inv_masterdata=inv_masterdata, 
-            quantity=quantity,                                    
+            inv_masterdata=inv_masterdata,
+            quantity=quantity,
         )
         InventoryServices.validate_item(inventory_item)
         return data
-    
-#######################################     
+
+#######################################
 ########## MovementSerializer ###
 #######################################

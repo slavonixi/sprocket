@@ -5,11 +5,11 @@ from datetime import datetime, timezone
 from report.models import Operation
 
 # EXCEPTIONS
-from report import exceptions
+from core.exceptions import BusinessLogicError
 
 
 class OperationServices:
-     
+
     VALID_CREATION_STATUS = (
         Operation.Operation_status.DRAFT,     # administrator
         Operation.Operation_status.PLANNED,   # administrator
@@ -40,16 +40,15 @@ class OperationServices:
 
         # check if the initial status is valid
         if operation_instance.status not in OperationServices.VALID_CREATION_STATUS:
-            raise exceptions.IllegalOperationStatus(operation_instance.status)
+            raise BusinessLogicError("Operation invalid status: {operation_instance.status}")
 
         # Check if the initial status implies technician assigned at the task
         if operation_instance.status is OperationServices.DRAFT_STATUS:
             if not operation_instance.technician_fk:
-                raise exceptions.TechniciansRequired()
-
+                raise BusinessLogicError("Technicians are required")
         return True
 
-        
+
 
     #########################
     #  VALIDATION METHODS   #
@@ -65,7 +64,7 @@ class OperationServices:
         """
         ReportServices.is_initial_status_valid(report_instance)
         return True
-            
+
 
     #########################
     #  APPLICATION METHODS  #
