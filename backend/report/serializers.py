@@ -24,14 +24,14 @@ from inventory.models import Movement
 
 
 class UsedMaterialsSerializer(serializers.ModelSerializer):
-    
+
     operation_fk = serializers.HyperlinkedRelatedField(
-        queryset = Operation.objects.all(),    
-        view_name='api:operation-detail', # Deve corrispondere al nome nel router    
+        queryset = Operation.objects.all(),
+        view_name='api:operation-detail', # Deve corrispondere al nome nel router
     )
     inventory_fk = serializers.HyperlinkedRelatedField(
-        queryset = Inventory.objects.all(),    
-        view_name='inventory:inventory-detail', # Deve corrispondere al nome nel router    
+        queryset = Inventory.objects.all(),
+        view_name='inventory:inventory-detail', # Deve corrispondere al nome nel router
     )
     desc = serializers.CharField(source="inventory_fk.inv_masterdata.desc", read_only = True)
 
@@ -58,21 +58,21 @@ class UsedMaterialsSerializer(serializers.ModelSerializer):
             old_qta = self.instance.qta
             new_qta = data.get('qta')
             inventory_item = data.get('inventory_fk')
-            #ServiceOrchestrator.validate_withdraw_update(inventory_item, old_qta, new_qta)     
+            #ServiceOrchestrator.validate_withdraw_update(inventory_item, old_qta, new_qta)
 
         else:
             # Siamo in un CREATE (POST)
             inventory_item = data.get('inventory_fk')
             qta = data.get('qta')
-            
-            #ServiceOrchestrator.validate_inventory_withdraw(inventory_item, qta)        
+
+            #ServiceOrchestrator.validate_inventory_withdraw(inventory_item, qta)
         return data
 
 class OperationSerializerDetail(serializers.ModelSerializer):
 
     report_fk = serializers.HyperlinkedRelatedField(
-        queryset = Report.objects.all(),    
-        view_name='api:report-detail', # Deve corrispondere al nome nel router    
+        queryset = Report.objects.all(),
+        view_name='api:report-detail', # Deve corrispondere al nome nel router
     )
 
     technician_fk = serializers.HyperlinkedRelatedField(
@@ -87,12 +87,12 @@ class OperationSerializerDetail(serializers.ModelSerializer):
         read_only=True,
         view_name='inventory:inventory-detail',
     )
-        
+
 
     class Meta:
         model = Operation
         fields = [
-            "id", 
+            "id",
             "date",
             "desc",
             "report_fk",
@@ -100,40 +100,27 @@ class OperationSerializerDetail(serializers.ModelSerializer):
             "involved_materials",
         ]
 
-    def validate(self, data):
-        if self.instance:       # PUT / PATCH
-            pass
-        else:                   # POST (creation)
-            # get the user
-            request = self.context.get('request')
-            user = request.user if request else None
-            # create the operation instance
-            operation_instance = Operation(
-                **data,
-            )
-            # validate the input via the orchestrator
-            ReportOrchestrator.validate_create_operation(user, operation_instance)
-    
 
-    
+
+
 class ReportSerializerDetail(serializers.ModelSerializer):
     """
         Provide Report's details and extra-fields for
         dashboard visualization. Read-only
     """
-#    
+#
 #    owner = serializers.ReadOnlyField(source="owner.username")
 #        eventually develop a technician who owns a report (r u d)
 #
 #        any other involved technician will be only able to read n update (?)
-    
+
 
     customer_fk = serializers.HyperlinkedRelatedField(
         many=False,
-        view_name='api:customer_records-detail', 
+        view_name='api:customer_records-detail',
         queryset=Customer_records.objects.all(),
     )
-    
+
     involved_operations = serializers.HyperlinkedRelatedField(
         many=True,
         read_only=True,
@@ -189,24 +176,36 @@ class ReportSerializer(serializers.ModelSerializer):
             "date_close",
             "status",
         ]
-    
+
     def validate(self, data):
-        if not self.instance:
-            ReportOrchestrator.validate_create_report()
+        if not self.instance:       # CREATION
+            request = self.context.get('request')
+            user = request.user if request else None
+
+            report_instance = Report(**data)
+            ReportOrchestrator.validate_create_report(user, report_instance)
+
 
 class OperationSerializer(serializers.ModelSerializer):
 
-    
+
 
     class Meta:
         model = Operation
         fields = [
-            "id", 
+            "id",
             "date",
             "desc",
             "report_fk",
-            "customer_id",
         ]
+
+        def validate(self, data):
+            if not self.instance
+                request = self.context.get('request')
+                user = request.user if request else None
+
+                operation_instance = Operation(**data)
+                ReportOrchestrator.validate_create_operation(user, operation_instance)
 
 class ReportAndOperationCreateSerializer(serializers.ModelSerializer):
     """
@@ -214,11 +213,11 @@ class ReportAndOperationCreateSerializer(serializers.ModelSerializer):
         OperationSerializer nested
     """
     initial_operation = OperationSerializer(
-        write_only=True, 
-        required=False, 
+        write_only=True,
+        required=False,
         allow_null=True,
     )
-    
+
     class Meta:
         model = Report
         fields = [
@@ -228,7 +227,5 @@ class ReportAndOperationCreateSerializer(serializers.ModelSerializer):
             "date_open",
             "date_close",
             "status",
-            "initial_operation",    # Operation object           
+            "initial_operation",    # Operation object
         ]
-
-

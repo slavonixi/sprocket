@@ -20,7 +20,7 @@ def api_rf():
 @pytest.fixture
 def supervisor_user(db):
     user = User.objects.create_user(username="supervisor", is_active=True)
-    
+
     # Assign custom permission
     content_type = ContentType.objects.get_for_model(Movement)
     perm = Permission.objects.get(codename="can_adjust_movement", content_type=content_type)
@@ -63,7 +63,7 @@ class TestMovementSerializer:
             measureUnit = measure_unit_item,
             price = 9.99,
         )
-    
+
     @pytest.fixture
     def inventory_item(self, masterdata_item):
         """Creates a sample Inventory instance."""
@@ -101,10 +101,10 @@ class TestMovementSerializer:
         serializer = MovementSerializer(data=payload, context=serializer_context)
 
         assert serializer.is_valid(), serializer.errors
-        
+
         # Verify InventoryOrchestrator.validate_movement_create was called once
         assert mock_orchestrator.call_count == 1
-        
+
         # Verify passed arguments to the orchestrator
         call_args, call_kwargs = mock_orchestrator.call_args
         assert call_args[0] == inventory_item  # inventory_item

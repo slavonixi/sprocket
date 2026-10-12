@@ -5,7 +5,10 @@ from django.db import transaction
 
 
 # MODELS
-from report.models import Operation, Report
+from report.models import (
+    Report,
+    Operation,
+)
 
 # EXCEPTIONS
 from core.exceptions import BusinessLogicError
@@ -16,6 +19,8 @@ class ReportOrchestrator:
         Report.Report_status.DRAFT,
         Report.Report_status.OPEN,
     )
+
+
 
     #########################################
     #    Permissions Validation Methods     #
@@ -35,6 +40,10 @@ class ReportOrchestrator:
         else:
             raise IllegalReportStatus(status)
 
+    def is_operation_initial_status_valid(user, operation_status):
+        i
+
+
     #########################
     #  VALIDATION METHODS   #
     #########################
@@ -48,12 +57,7 @@ class ReportOrchestrator:
                 - if you are a technician
         """
 
-        # checks if the operation instance is valid
-        OperationServices.validate_operation_instance(operation_instance)
-        # if is a planning, check if is an admin
-        ReportOrchestrator.can_plan_operations(user, operation_instance)
-        # if is a starting, check if is a technician
-        ReportOrchestrator.can_start_operation(user, operation_instance)
+
         return True
 
     @staticmethod

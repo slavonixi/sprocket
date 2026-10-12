@@ -29,7 +29,7 @@ class ReportServices:
         if date_open:
             if status is Report.Report_status.DRAFT:
                 # a DRAFT report can't have a date_open
-                raise BusinessLogicError("draft reports have not date")
+                raise BusinessLogicError("draft reports don't have an open date")
         elif status is Report.Report_status.OPEN:
             # an OPEN report must have a date_open
             raise BusinessLogicError("Open reports must have a date")

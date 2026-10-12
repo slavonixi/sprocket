@@ -6,7 +6,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.utils import timezone
 
 # EXCEPTIONS
-from report import exceptions
+from core.exceptions import BusinessLogicError
 
 # MODELS
 from report.models import Operation
