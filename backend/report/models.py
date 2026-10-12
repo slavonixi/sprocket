@@ -1,142 +1,128 @@
-from django.db import models
-from django.db import models
-from django.utils.translation import gettext_lazy as _
-from django.core.validators import RegexValidator
 import uuid
-import datetime
+from django.db import models
+from django.conf import settings
+from django.utils import timezone
+from django.core.validators import RegexValidator
+from django.utils.translation import gettext_lazy as _
+
+#OTHER MODELS
 from inventory.models import Movement
 from inventory.models import Inventory
 from administration.models import HR_records
 from administration.models import Customer_records
 from administration.models import Machinery_records
 
-
 class Report(models.Model):
-    class Report_status(models.TextChoices):
-        """
-            Report's status (v4)
-        """
-        # When an administrator creates a Report with no
-        # PLANNED Operations, it has to be a DRAFT
-        DRAFT = "DR", _("Draft")
-        # A report is open, but nobody is working on it
-        # atm and the tasks are not completed yet
-        OPEN = "OP", _("Open")
-        # All the work is done. The administration
-        # closes the report and then creates the invoice
-        CLOSED = "CL", _("Closed")
-        # A work can be cancelled, if it was created
-        # for mistake or the client is no longer interested
-        CANCELLED = "CA", _("Cancelled")
-        # Technicians already completed some tasks, but the
-        # work is suspended due to parts shortage for instance
-        HOLD_ON = "HO", _("Hold on")
-        # Technician has closed a report and admin has to
-        # approve the closure or re-open it
-        PENDING = "PE", _("Pending")
+    # Identificatore univoco globale per sincronizzazione offline sicura (evita collisioni ID)
+    report_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
 
+    # Codice human-readable progressivo (es. REP-2026-0001) per la ricerca rapida in azienda
+    code = models.CharField(max_length=50, unique=True, db_index=True)
 
-    report_id = models.UUIDField(
-        primary_key=True,
-        default=uuid.uuid4,
-        editable=False,
-        help_text="ID univoco generato automaticamente (UUID4)"
-    )
-    desc = models.CharField(max_length=100)
-    customer_fk = models.ForeignKey(Customer_records, on_delete=models.PROTECT)
-    date_open = models.DateTimeField(
-        _("date opened"),
-        default = None,
-        null = True,
-        blank = True,
-    )
-    date_close = models.DateTimeField(
-        _("date closed"),
-        default = None,
-        null = True,
-        blank = True,
-    )
-    #technicians = models.ManyToManyField(HR_records)   #spostato in Operation
-    status = models.CharField(
-        max_length = 2,
-        choices = Report_status,
-        default = Report_status.OPEN,
-    )
+    # Relazioni anagrafiche principali
+    customer_fk = models.ForeignKey('Customer', on_delete=models.PROTECT, related_name='reports')
+    machinery_fk = models.ForeignKey('Machinery', on_delete=models.PROTECT, related_name='reports', null=True, blank=True)
 
-    @property
-    def involved_technicians_queryset(self):
-        # Usiamo 'self' perché siamo dentro il modello
-        return HR_records.objects.filter(operation__report_fk=self).distinct()
+    # Classificazione e Priorità
+    class Priority(models.TextChoices):
+        LOW = 'LOW', 'Bassa'
+        MEDIUM = 'MED', 'Media'
+        HIGH = 'HIGH', 'Alta'
+        EMERGENCY = 'EMG', 'Emergenza / Blocco Impianto'
+
+    priority = models.CharField(max_length=10, choices=Priority.choices, default=Priority.MEDIUM)
+
+    class ReportStatus(models.TextChoices):
+        DRAFT = 'DRAFT', 'Bozza (In redazione)'
+        PLANNED = 'PLANNED', 'Pianificato / Assegnato'
+        IN_PROGRESS = 'IN_PROGRESS', 'In Esecuzione'
+        ON_HOLD = 'ON_HOLD', 'Sospeso (Attesa Ricambi/Cliente)'
+        COMPLETED = 'COMPLETED', 'Completato'
+        CLOSED = 'CLOSED', 'Chiuso (Amministrativamente)'
+        CANCELLED = 'CANCELLED', 'Annullato'
+
+    status = models.CharField(max_length=20, choices=ReportStatus.choices, default=ReportStatus.DRAFT)
+
+    # Descrizioni e Note
+    title = models.CharField(max_length=255) # Oggetto sintetico del guasto/intervento
+    description = models.TextField(blank=True) # Descrizione dettagliata fornita dal cliente/admin
+    internal_notes = models.TextField(blank=True, help_text="Note visibili solo agli amministratori/caporeparto")
+
+    # Timestamp e Metadati temporali
+    date_created = models.DateTimeField(auto_now_add=True)
+    date_scheduled = models.DateTimeField(null=True, blank=True, help_text="Data stimata di intervento")
+    date_started = models.DateTimeField(null=True, blank=True)
+    date_closed = models.DateTimeField(null=True, blank=True)
+
+    # Audit trail (Chi ha creato/modificato)
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='created_reports')
+
+    # Campi tecnici per la sincronizzazione offline (Conflict Resolution)
+    synced_at = models.DateTimeField(null=True, blank=True, help_text="Ultimo timestamp di sincronizzazione mobile")
+    device_local_id = models.CharField(max_length=100, blank=True, null=True, help_text="ID generato dal device offline")
 
     def __str__(self):
         return self.desc
 
     class Meta:
+        indexes = [
+            models.Index(fields=['status', 'date_scheduled']),
+            models.Index(fields=['customer_fk']),
+        ]
+
         permissions = [
             ("can_draft_report", _("Can draft reports")),
         ]
 
-#                   **************************************************************
-#   Operation contains every single operation that will appear in the
-#   report
-#
+
 class Operation(models.Model):
-    class Operation_status(models.TextChoices):
-        """
-            Operation's status (v1)
-        """
-        # An admin is building a report. Only him can see it
-        DRAFT = "DR", _("Draft")
-        # The operation is planned and technicians are assigned
-        PLANNED = "PL", ("Planned")
-        # The operation is done
-        FINISHED = "FI", ("Finished")
-        # Technicians are working on the field
-        RUNNING = "RU", ("Running")
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
 
-    date = models.DateTimeField("operation's date")
-    desc = models.CharField(max_length=500)
-    report_fk = models.ForeignKey(
-        Report,
-        on_delete=models.PROTECT,
-        blank=True,
-        null=True,
-        default=None,
-    )
-    technician_fk = models.ManyToManyField(
-        HR_records,
-        blank=True,
-        default=None,
-        related_name='technician_operations',
-    )
+    # Relazione obbligatoria con il Report padre
+    report_fk = models.ForeignKey(Report, on_delete=models.CASCADE, related_name='operations')
 
-    status = models.CharField(
-        max_length = 2,
-        choices = Operation_status,
-        default = Operation_status.DRAFT,
-    )
+    # Assegnazione Tecnici (Molti a Molti: un'operazione può essere fatta da più tecnici)
+    technicians = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='assigned_operations', blank=True)
 
-    created_by = models.ForeignKey(
-        HR_records,
-        on_delete=models.PROTECT,
-        related_name='created_operations',
-    )
+    class OperationStatus(models.TextChoices):
+        PLANNED = 'PLANNED', 'Pianificato'
+        RUNNING = 'RUNNING', 'In Esecuzione (Timer attivo)'
+        PAUSED = 'PAUSED', 'In Sospeso'
+        COMPLETED = 'COMPLETED', 'Completato'
+        CANCELLED = 'CANCELLED', 'Annullato'
 
+    status = models.CharField(max_length=20, choices=OperationStatus.choices, default=OperationStatus.OperationStatus.PLANNED)
+
+    # Dettagli del task
+    title = models.CharField(max_length=255) # Es. "Sostituzione cuscinetto asse principale"
+    instructions = models.TextField(blank=True, help_text="Istruzioni operative assegnate dall'ufficio")
+    work_notes = models.TextField(blank=True, help_text="Note tecniche inserite dal tecnico a fine intervento")
+
+    # Tracciamento Temporale e Ore Lavorate
+    scheduled_datetime = models.DateTimeField(null=True, blank=True)
+    execution_start_date = models.DateTimeField(null=True, blank=True)
+    execution_end_date = models.DateTimeField(null=True, blank=True)
+
+    # Ore effettive spese (può essere inserito a mano o calcolato automaticamente dalle date)
+    hours_spent = models.DecimalField(max_digits=5, decimal_places=2, default=0.00)
+
+    # Campi di sincronizzazione offline
+    synced_at = models.DateTimeField(null=True, blank=True)
 
     @property
     def involved_materials_queryset(self):
         return Inventory.objects.filter(usedmaterials__operation_fk=self).distinct()
 
-
     def __str__(self):
         return self.desc
 
     class Meta:
+        ordering = ['scheduled_datetime']
+
         permissions = [
             ("can_plan_operations", _("Can assign technician or create draft operations")),
             ("can_run_operations", _("Can start an operation")),
         ]
-
 
 class UsedMaterials(models.Model):
 
