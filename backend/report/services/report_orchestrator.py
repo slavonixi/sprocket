@@ -20,6 +20,10 @@ class ReportOrchestrator:
         Report.Report_status.OPEN,
     )
 
+    OPERATION_INITIAL_STATUS = (
+        Operation.Operation_status.PLANNED,
+        Operation.Operation_status.RUNNING,
+    )
 
 
     #########################################
@@ -27,22 +31,36 @@ class ReportOrchestrator:
     #########################################
 
     @staticmethod
-    def is_report_initial_status_valid(user, report_instance):
-        status = report_instance.status
+    def is_report_initial_status_valid(user, report_status):
         # check if the status is in the valid initial status
-        if status in ReportOrchestrator.REPORT_INITIAL_STATUS:
-            # the status is valid, but we have to check
+        if report_status in ReportOrchestrator.REPORT_INITIAL_STATUS:
+            # the report_status is valid, but we have to check
             # if the user can 'draft' a report
             if not user.has_perm('report.can_draft_report'):
                 if status is Report.Report_status.DRAFT:
-                    raise PermissionDenied('draft_report')
+                    raise BusinessLogicError(_('You have not the permission to draft a report'))
             return True
         else:
-            raise IllegalReportStatus(status)
+            raise BusinessLogicError(_("The report's initial status is not valid"))
 
+    @staticmethod
     def is_operation_initial_status_valid(user, operation_status):
-        i
-
+        """
+            - Technicians can create RUNNING operations
+            - Admins can create PLANNED operations
+        """
+        # check if the initial status is valid
+        if status is Operation.Operation_status.PLANNED:
+            # Only admins can create a PLANNED operation
+            if not user.has_perm('report.can_plan_operations'):
+                raise BusinessLogicError(_('You have not the permissions to plan an operation'))
+        elif status is Operation.Operation_status.RUNNING:
+            # Only technicians can create RUNNING operations
+            if not user.has_perm('report.can_run_operations'):
+                raise BusinessLogicError(_('You have not the permissions to run an operation'))
+        else:
+            raise BusinessLogicError(_("The operation's initial status is not valid"))
+        return True
 
     #########################
     #  VALIDATION METHODS   #
@@ -52,17 +70,17 @@ class ReportOrchestrator:
     @staticmethod
     def validate_create_operation(user, operation_instance):
         """
-            When creating an operation it checks:
-                - operation instance is valid
-                - if you are a technician
-        """
 
+        """
+        # check if the initial status is valid
+        ReportOrchestrator.is_operation_initial_status_valid(user, operation_instance.status)
+        OperationServices.validate_create_operation(operation_instance)
 
         return True
 
     @staticmethod
     def validate_create_report(user, report_instance):
-        ReportOrchestrator.is_report_initial_status_valid(user, report_instance)
+        ReportOrchestrator.is_report_initial_status_valid(user, report_instance.status)
         ReportServices.validate_new_report_instance(report_instance)
 
     #########################

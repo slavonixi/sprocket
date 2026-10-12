@@ -200,7 +200,7 @@ class OperationSerializer(serializers.ModelSerializer):
         ]
 
         def validate(self, data):
-            if not self.instance
+            if not self.instance:
                 request = self.context.get('request')
                 user = request.user if request else None
 
