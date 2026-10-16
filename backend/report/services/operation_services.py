@@ -17,7 +17,7 @@ class OperationServices:
     #########################
 
     def is_date_valid(operation_instance : Operation):
-
+        pass
 
 
 
@@ -29,6 +29,7 @@ class OperationServices:
     def validate_operation_instance(operation_instance):
         # check if the date is valid
         OperationServices.is_date_valid(operation_instance)
+
         return True
 
 

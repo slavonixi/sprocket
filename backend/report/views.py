@@ -76,22 +76,11 @@ class ReportViewSet(viewsets.ModelViewSet):
 
     def get_serializer_class(self):
         if self.action == 'create':
-            user = self.request.user
-            # if the user is a technician, he cant plan reports
-            if not user.has_perm('report.can_plan_operations'):
-                # thus technicians must start an operation
-                if 'initial_operation' not in self.request.data:
-                    # if they are not creating an operation, raise an exception
-                    raise PermissionDenied(op='create_report')
-                return ReportCreateWithOperationSerializer
-            # in this case the user is an admin
-            # if the admin put operation's data he creates report + first operation (PLANNED status)
-            if 'initial_operation' in self.request.data:
-                return ReportCreateWithOperationSerializer
-            # Otherwise he's going to create a void report
+            # specifically for include the operation
+            return ReportAndOperationCreateSerializer
+        else:
+            # should add the check for details or list (information are very different)
             return ReportSerializer
-
-        return ReportSerializer
 
     queryset = models.Report.objects.all()
     permission_classes = [permissions.IsAuthenticated]

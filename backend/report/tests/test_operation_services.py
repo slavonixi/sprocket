@@ -29,7 +29,7 @@ class TestReportServices:
     def sample_operation(self):
         return Operation.objects.create(
             desc = 'test Operation',
-            status = Operation.Operation_status.DRAFT,
+            status = Operation.OperationStatus.DRAFT,
             date = timezone.now(),
         )
 

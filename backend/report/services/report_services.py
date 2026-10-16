@@ -15,6 +15,7 @@ class ReportServices:
     #########################
 
 
+
     @staticmethod
     def are_dates_valid(report_instance : Report):
         """
@@ -27,10 +28,10 @@ class ReportServices:
         date_open = report_instance.date_open
 
         if date_open:
-            if status is Report.Report_status.DRAFT:
+            if status is Report.ReportStatus.DRAFT:
                 # a DRAFT report can't have a date_open
                 raise BusinessLogicError("draft reports don't have an open date")
-        elif status is Report.Report_status.OPEN:
+        elif status is Report.ReportStatus.OPEN:
             # an OPEN report must have a date_open
             raise BusinessLogicError("Open reports must have a date")
 

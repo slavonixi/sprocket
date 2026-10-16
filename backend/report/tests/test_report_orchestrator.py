@@ -24,7 +24,7 @@ User = get_user_model()
 def supervisor_user(db):
     """Supervisor/administrator user who can only plan or draft operations"""
     user = User.objects.create_user(username="supervisor", is_active=True)
-    
+
     # Assign custom permission
     content_type = ContentType.objects.get_for_model(Operation)
     perm = Permission.objects.get(codename="can_plan_operations", content_type=content_type)
@@ -36,7 +36,7 @@ def supervisor_user(db):
 def technician_user(db):
     """Technician user who can only start operations"""
     user = User.objects.create_user(username="technician", is_active=True)
-    
+
     # Assign custom permission
     content_type = ContentType.objects.get_for_model(Operation)
     perm = Permission.objects.get(codename="can_run_operations", content_type=content_type)
@@ -45,12 +45,12 @@ def technician_user(db):
 
 @pytest.mark.django_db
 class TestReportOrchestrator:
-    
+
     @pytest.fixture
     def sample_operation(self):
         return Operation.objects.create(
             desc = 'test Operation',
-            status = Operation.Operation_status.DRAFT,
+            status = Operation.OperationStatus.DRAFT,
             date = timezone.now(),
         )
 
@@ -60,24 +60,22 @@ class TestReportOrchestrator:
 
     @patch('report.services.report_orchestrator.OperationServices.validate_operation_instance')
     def test_supervisor_can_plan_operation(self, supervisor_user, sample_operation):
-        sample_operation.status = Operation.Operation_status.PLANNED
+        sample_operation.status = Operation.OperationStatus.PLANNED
         assert ReportOrchestrator.validate_create_operation(supervisor_user, sample_operation) is True
 
     @patch('report.services.report_orchestrator.OperationServices.validate_operation_instance')
     def test_supervisor_cannot_run_operation(self, mock_validate, supervisor_user, sample_operation):
-        sample_operation.status = Operation.Operation_status.RUNNING
+        sample_operation.status = Operation.OperationStatus.RUNNING
         with pytest.raises(exceptions.PermissionDenied):
             ReportOrchestrator.validate_create_operation(supervisor_user, sample_operation)
 
     @patch('report.services.report_orchestrator.OperationServices.validate_operation_instance')
     def test_technician_can_run_operation(self, mock_validate, technician_user, sample_operation):
-        sample_operation.status = Operation.Operation_status.RUNNING
+        sample_operation.status = Operation.OperationStatus.RUNNING
         assert ReportOrchestrator.validate_create_operation(technician_user, sample_operation) is True
 
     @patch('report.services.report_orchestrator.OperationServices.validate_operation_instance')
     def test_technician_cannot_plan_operation(self, mock_validate, technician_user, sample_operation):
-        sample_operation.status = Operation.Operation_status.PLANNED
+        sample_operation.status = Operation.OperationStatus.PLANNED
         with pytest.raises(exceptions.PermissionDenied):
             ReportOrchestrator.validate_create_operation(technician_user, sample_operation)
-
-    

@@ -158,13 +158,14 @@ class ReportSerializerDetail(serializers.ModelSerializer):
 
 
 #****#########################***********************************************************
-#****#    LIST SERIALIZERS   #***********************************************************
+#****#   CREATE SERIALIZERS  #***********************************************************
 #****#########################***********************************************************
 
 class ReportSerializer(serializers.ModelSerializer):
     """
         For list views or POST (report creation, without operations)
     """
+    status = serializers.CharField(required=False)
 
     class Meta:
         model = Report

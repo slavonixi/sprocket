@@ -9,8 +9,10 @@ from django.utils.translation import gettext_lazy as _
 from inventory.models import Movement
 from inventory.models import Inventory
 from administration.models import HR_records
-from administration.models import Customer_records
-from administration.models import Machinery_records
+from administration.models import (
+    Customer_records,
+    Machinery_records,
+)
 
 class Report(models.Model):
     # Identificatore univoco globale per sincronizzazione offline sicura (evita collisioni ID)
@@ -20,26 +22,26 @@ class Report(models.Model):
     code = models.CharField(max_length=50, unique=True, db_index=True)
 
     # Relazioni anagrafiche principali
-    customer_fk = models.ForeignKey('Customer', on_delete=models.PROTECT, related_name='reports')
-    machinery_fk = models.ForeignKey('Machinery', on_delete=models.PROTECT, related_name='reports', null=True, blank=True)
+    customer_fk = models.ForeignKey(Customer_records, on_delete=models.PROTECT, related_name='reports')
+    machinery_fk = models.ForeignKey(Machinery_records, on_delete=models.PROTECT, related_name='reports', null=True, blank=True)
 
     # Classificazione e Priorità
     class Priority(models.TextChoices):
-        LOW = 'LOW', 'Bassa'
-        MEDIUM = 'MED', 'Media'
-        HIGH = 'HIGH', 'Alta'
-        EMERGENCY = 'EMG', 'Emergenza / Blocco Impianto'
+        LOW = 'LOW', _('LOW')
+        MEDIUM = 'MED', _('MED')
+        HIGH = 'HIGH', _('HIGH')
+        EMERGENCY = 'EMG', _('EMG')
 
     priority = models.CharField(max_length=10, choices=Priority.choices, default=Priority.MEDIUM)
 
     class ReportStatus(models.TextChoices):
-        DRAFT = 'DRAFT', 'Bozza (In redazione)'
-        PLANNED = 'PLANNED', 'Pianificato / Assegnato'
-        IN_PROGRESS = 'IN_PROGRESS', 'In Esecuzione'
-        ON_HOLD = 'ON_HOLD', 'Sospeso (Attesa Ricambi/Cliente)'
-        COMPLETED = 'COMPLETED', 'Completato'
-        CLOSED = 'CLOSED', 'Chiuso (Amministrativamente)'
-        CANCELLED = 'CANCELLED', 'Annullato'
+        DRAFT = 'DRAFT', _('Draft')
+        PLANNED = 'PLANNED', _('Planned')
+        OPEN = 'OPEN', _('OPEN')
+        ON_HOLD = 'ON_HOLD', _('ON_HOLD')
+        COMPLETED = 'COMPLETED', _('COMPLETED')
+        CLOSED = 'CLOSED', _('CLOSED')
+        CANCELLED = 'CANCELLED', _('CANCELLED')
 
     status = models.CharField(max_length=20, choices=ReportStatus.choices, default=ReportStatus.DRAFT)
 
@@ -91,7 +93,7 @@ class Operation(models.Model):
         COMPLETED = 'COMPLETED', 'Completato'
         CANCELLED = 'CANCELLED', 'Annullato'
 
-    status = models.CharField(max_length=20, choices=OperationStatus.choices, default=OperationStatus.OperationStatus.PLANNED)
+    status = models.CharField(max_length=20, choices=OperationStatus.choices, default=OperationStatus.PLANNED)
 
     # Dettagli del task
     title = models.CharField(max_length=255) # Es. "Sostituzione cuscinetto asse principale"
