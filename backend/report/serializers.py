@@ -200,33 +200,67 @@ class OperationSerializer(serializers.ModelSerializer):
             "report_fk",
         ]
 
-        def validate(self, data):
-            if not self.instance:
-                request = self.context.get('request')
-                user = request.user if request else None
-
-                operation_instance = Operation(**data)
-                ReportOrchestrator.validate_create_operation(user, operation_instance)
+#         def validate(self, validated_data):
+#             if not self.instance:
+#                 request = self.context.get('request')
+#                 user = request.user if request else None
+#
+#                 ReportOrchestrator.validate_create_operation(user, validated_data)
 
 class ReportAndOperationCreateSerializer(serializers.ModelSerializer):
-    """
-        For report + first operation creation, write-only\n
-        OperationSerializer nested
-    """
-    initial_operation = OperationSerializer(
-        write_only=True,
-        required=False,
-        allow_null=True,
-    )
+
+    # UUID opzionale in ingresso per supportare la creazione offline da mobile
+    report_id = serializers.UUIDField(required=False, allow_null=True)
+
+    # Il codice progressivo human-readable è sempre generato dal server
+    code = serializers.CharField(read_only=True)
+
+    # L'utente creatore viene assegnato automaticamente dal contesto della richiesta
+    created_by = serializers.HiddenField(default=serializers.CurrentUserDefault())
+
+    # Timestamp di sincronizzazione gestito dal backend
+    synced_at = serializers.DateTimeField(read_only=True, allow_null=True)
+
+    # Relazioni e flag di controllo
+    operation = OperationSerializer(many=True, required=False)
+    publish_immediately = serializers.BooleanField(write_only=True, required=False, default=False)
 
     class Meta:
         model = Report
         fields = [
-            "report_id",
-            "desc",
-            "customer_fk",
-            "date_open",
-            "date_close",
-            "status",
-            "initial_operation",    # Operation object
+            # identification
+            'report_id',
+            'code',
+            # relations
+            'customer_fk',
+            'machinery_fk',
+            # state fields
+            'status',
+            'priority',
+            # descriptions
+            'title',
+            'description',
+            'internal_notes',
+            # timestamp n metadata
+            'date_created',
+            'date_scheduled',
+            'date_started',
+            'date_closed',
+            'created_by',
+            'synced_at',
+            'publish_immediately',
+            # operations serializer
+            'operation',
         ]
+
+    def validate(self, validated_data):
+        if not self.instance:
+            # get user
+            request = self.context.get('request')
+            user = request.user if request else None
+
+            # start orchestrator's validation pipeline
+            ReportOrchestrator.validate_create_report(validated_data)   # passing the 'Dict'
+
+
+            )
