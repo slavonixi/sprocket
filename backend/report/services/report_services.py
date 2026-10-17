@@ -46,9 +46,10 @@ class ReportServices:
     #########################
 
     @staticmethod
-    def validate_new_report_instance(report_instance : Report):
-        ReportServices.are_dates_valid(report_instance)
-
+    def validate_instance(report_instance : Report):
+        """
+            validation report + operation
+        """
 
 
     #########################
