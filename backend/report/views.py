@@ -76,7 +76,7 @@ class ReportViewSet(viewsets.ModelViewSet):
 
     def get_serializer_class(self):
         if self.action == 'create':
-            # specifically for include the operation
+            # Giving the possibility to create the operation in the same moment
             return ReportAndOperationCreateSerializer
         else:
             # should add the check for details or list (information are very different)
@@ -84,3 +84,6 @@ class ReportViewSet(viewsets.ModelViewSet):
 
     queryset = models.Report.objects.all()
     permission_classes = [permissions.IsAuthenticated]
+
+    def perform_create(self, serializer):
+        report_data = serializer.validated_data

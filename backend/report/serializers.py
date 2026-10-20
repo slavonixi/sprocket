@@ -252,15 +252,3 @@ class ReportAndOperationCreateSerializer(serializers.ModelSerializer):
             # operations serializer
             'operation',
         ]
-
-    def validate(self, validated_data):
-        if not self.instance:
-            # get user
-            request = self.context.get('request')
-            user = request.user if request else None
-
-            # start orchestrator's validation pipeline
-            ReportOrchestrator.validate_create_report(validated_data)   # passing the 'Dict'
-
-
-            )
