@@ -159,7 +159,7 @@ class Operation(models.Model):
     #  OPERATION LOGIC METHODS  #
     #############################
 
-    def set_status(self, start_now : Boolean):
+    def set_initial_status(self, start_now : Boolean):
         if start_now:
             self.status = self.OperationStatus.RUNNING
         else:
