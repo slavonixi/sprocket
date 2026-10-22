@@ -178,18 +178,8 @@ class ReportSerializer(serializers.ModelSerializer):
             "status",
         ]
 
-    def validate(self, data):
-        if not self.instance:       # CREATION
-            request = self.context.get('request')
-            user = request.user if request else None
-
-            report_instance = Report(**data)
-            ReportOrchestrator.validate_create_report(user, report_instance)
-
 
 class OperationSerializer(serializers.ModelSerializer):
-
-
 
     class Meta:
         model = Operation
@@ -198,6 +188,7 @@ class OperationSerializer(serializers.ModelSerializer):
             "date",
             "desc",
             "report_fk",
+            "technician_fk",
         ]
 
 #         def validate(self, validated_data):
