@@ -1,11 +1,13 @@
 from django.db import transaction
-from datetime import datetime, timezone
+from django.utils import timezone
 from core.exceptions import BusinessLogicError
 
 
 # MODELS
-from report.models import Report
-
+from report.models import (
+    Report,
+    Operation,
+)
 
 
 class ReportServices:
@@ -14,44 +16,83 @@ class ReportServices:
     #     UTILS METHODS     #
     #########################
 
-
-
-    @staticmethod
-    def are_dates_valid(report_instance : Report):
+    @classmethod
+    def get_report_ORM(report_data):
         """
-            validate dates and raise an error if:
-                - date open is set but report is a DRAFT
-                - date close is set
-                - Report is OPEN but no date_open is provided
+            Translate a dict into a ready-to-use Report ORM
         """
-        status = report_instance.status
-        date_open = report_instance.date_open
+        report_data.pop('operation')
+        report_data.pop('publish_immediately')
+        report_orm = Report(**report_data)
+        return report_orm
 
-        if date_open:
-            if status is Report.ReportStatus.DRAFT:
-                # a DRAFT report can't have a date_open
-                raise BusinessLogicError("draft reports don't have an open date")
-        elif status is Report.ReportStatus.OPEN:
-            # an OPEN report must have a date_open
-            raise BusinessLogicError("Open reports must have a date")
+    @classmethod
+    def get_operation_ORM(operation_data):
+        """
+            Translate a dict into a ready-to-use Operation ORM
+        """
+        if operation_data.get("start_now"):
+            operation_data.pop("start_now")
+        operation_orm = Operation(**operation_data)
+        return operation_orm
 
-        if report_instance.date_close:
-            # a new report mustn't have a date_close
-            raise BusinessLogicError("A new report can't have a date close")
-        return True
 
+    ###################################
+    #   VALIDATION & NORMALIZATION    #
+    ###################################
+
+    def validate_report(report_orm, publish_now):
+        """
+            Performs report's validation and normalization:
+                - set report' status
+        """
+        report_orm.set_status(bool(operation_orm), publish_now)
+
+    def validate_operation(operation_orm, start_now):
+        operation_orm.set_status(start_now)
 
     #########################
-    #  VALIDATION METHODS   #
+    #   BUSINESS METHODS    #
     #########################
 
-    @staticmethod
-    def validate_instance(report_instance : Report):
+    @classmethod
+    def create_report(cls, report_data, operation_data):
         """
             validation report + operation
+                TODO:
+                    - status and op_exists
+
         """
+        # extracts flags
+        publish_now = report_data.get('publish_immediately')
+        start_now = report_data.get('operation').get('start_now') or None
+
+        # getting ORM instances (from dicts)
+        report_orm = cls.get_report_ORM(report_data)
+        # Operation ORM is created only if operation_date IS NOT '{}' (so the user choosed to create no operations)
+        operation_orm = (
+            cls.get_operation_ORM(operation_data) if operation_data else None
+        )
+
+        # business logic validation and normalization phase
+        # set report's status --> validate_report()
+
+        report_orm.set_status(bool(operation_orm), publish_now)
+
+        # report end -> operation validation
+        operation_orm.report_fk = report_orm
 
 
-    #########################
-    #  APPLICATION METHODS  #
-    #########################
+        with transaction.atomic():
+            report_orm.save()
+
+    def create_operation(operation_data, start_now : Bool):
+        # retrieve start now flag
+        start_now = operation_data.get("start_now") or None
+        # turns the dict into an ORM
+        operation_orm = cls.get_operation_ORM(operation_data)
+        # normalization/validation
+        cls.validate_operation(operation_orm)
+        # create_operation
+        # add transaction.atomic()
+        operation_orm.save()
