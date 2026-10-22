@@ -76,6 +76,34 @@ class Report(models.Model):
             ("can_draft_report", _("Can draft reports")),
         ]
 
+    #############################
+    #   REPORT LOGIC METHODS    #
+    #############################
+
+
+    def set_initial_status(self, operations : Boolean, publish_now : Boolean):
+        """
+            Set the status of the report taking into account:
+                - if there are operations linked to it
+                - if the report has to be published now or not
+        """
+        if self.status:
+            # if the status was already set by a supervisor
+            # let it be
+            return False
+
+        if publish_now:
+            # Publish the report means that it IS NOT a 'DRAFT'
+            if operations:
+                # If there are operations the entire report is 'PLANNED'
+                report_orm.status = Report.ReportStatus.PLANNED
+            else:
+                # If there aren't, the report is simply 'OPEN'
+                report_orm.status = Report.ReportStatus.OPEN
+        else:
+            # Otherwise it is a 'DRAFT'
+            report_orm.status = Report.ReportStatus.DRAFT
+
 
 class Operation(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -87,11 +115,12 @@ class Operation(models.Model):
     technicians = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='assigned_operations', blank=True)
 
     class OperationStatus(models.TextChoices):
-        PLANNED = 'PLANNED', 'Pianificato'
-        RUNNING = 'RUNNING', 'In Esecuzione (Timer attivo)'
-        PAUSED = 'PAUSED', 'In Sospeso'
-        COMPLETED = 'COMPLETED', 'Completato'
-        CANCELLED = 'CANCELLED', 'Annullato'
+        DRAFT = 'DRAFT', _('Draft')
+        PLANNED = 'PLANNED', _('Planned')
+        RUNNING = 'RUNNING', _('Running')
+        PAUSED = 'PAUSED', _('Paused')
+        COMPLETED = 'COMPLETED', _('Completed')
+        CANCELLED = 'CANCELLED', _('Cancelled')
 
     status = models.CharField(max_length=20, choices=OperationStatus.choices, default=OperationStatus.PLANNED)
 
@@ -125,6 +154,16 @@ class Operation(models.Model):
             ("can_plan_operations", _("Can assign technician or create draft operations")),
             ("can_run_operations", _("Can start an operation")),
         ]
+
+    #############################
+    #  OPERATION LOGIC METHODS  #
+    #############################
+
+    def set_status(self, start_now : Boolean):
+        if start_now:
+            self.status = self.OperationStatus.RUNNING
+        else:
+            self.status = self.OperationStatus.PLANNED
 
 class UsedMaterials(models.Model):
 
