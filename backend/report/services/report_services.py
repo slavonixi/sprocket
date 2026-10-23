@@ -22,7 +22,7 @@ class ReportServices:
             Translate a dict into a ready-to-use Report ORM
         """
         report_data.pop('operation')
-        report_data.pop('publish_immediately')
+        report_data.pop('publish_now')
         report_orm = Report(**report_data)
         return report_orm
 
@@ -41,58 +41,98 @@ class ReportServices:
     #   VALIDATION & NORMALIZATION    #
     ###################################
 
-    def validate_report(report_orm, publish_now):
+    @classmethod
+    def can_add_operation_to_report(report_orm):
         """
-            Performs report's validation and normalization:
-                - set report' status
+        Check if report_fk (report_orm) is valid and accept
+        operation
         """
-        report_orm.set_status(bool(operation_orm), publish_now)
-
-    def validate_operation(operation_orm, start_now):
-        operation_orm.set_status(start_now)
+        if hasattr(report_orm, 'is_open_for_operations'):
+            if report_orm.is_open_for_operations:
+                return True
+            else:
+                raise BusinessLogicError(
+                    _("The report is not open for new operations")
+                )
+        else:
+            raise BusinessLogicError(
+                _("The operation must be associated to a report")
+            )
 
     #########################
-    #   BUSINESS METHODS    #
+    #    PUBLIC METHODS     #
     #########################
 
     @classmethod
-    def create_report(cls, report_data, operation_data):
+    @transaction.atomic
+    def new_report(cls, report_data, operation_data):
         """
             validation report + operation
                 TODO:
                     - status and op_exists
 
         """
-        # extracts flags
-        publish_now = report_data.get('publish_immediately')
-        start_now = report_data.get('operation').get('start_now') or None
+        # retrieve flag
+        publish_now = report_data.get('publish_now')
 
-        # getting ORM instances (from dicts)
+        # get report ORM
         report_orm = cls.get_report_ORM(report_data)
-        # Operation ORM is created only if operation_date IS NOT '{}' (so the user choosed to create no operations)
-        operation_orm = (
-            cls.get_operation_ORM(operation_data) if operation_data else None
+
+        # set status
+        initial_status = report_orm.calculate_initial_status(
+            publish_now = publish_now,
+            has_operations = False,
         )
+        report_orm.status = initial_status
 
-        # business logic validation and normalization phase
-        # set report's status --> validate_report()
+        # create empty report
+        report_orm.save()
+        return True
 
-        report_orm.set_status(bool(operation_orm), publish_now)
+    @classmethod
+    @transaction.atomic
+    def add_operation_to_report(cls, operation_data):
+        # retrieve start now flag
+        start_now = operation_data.get("start_now")
 
-        # report end -> operation validation
+        # get operation ORM
+        operation_orm = cls.get_operation_ORM(operation_data)
+
+        # is the report open?
+        cls.can_add_operation_to_report(operation_orm.report_fk)
+
+        # set status
+        initial_status = operation_orm.calculate_initial_status(start_now)
+        operation_orm.status = initial_status
+
+        # create_operation
+        operation_orm.save()
+        return True
+
+    @classmethod
+    @transaction.atomic
+    def new_report_with_operation(cls, report_data, operation_data):
+        # retrieve flags
+        start_now = operation_data.get('start_now')
+        publish_now = report_data.get('publish_now')
+
+        # get ORMs
+        operation_orm = cls.get_operation_ORM(operation_data)
+        report_orm = cls.get_report_ORM(report_data)
+
+        # attach operation to the parent report
         operation_orm.report_fk = report_orm
 
+        # set status
+        operation_initial_status = operation_orm.calculate_initial_status(start_now)
+        operation_orm.status = operation_initial_status
+        report_initial_status = report_orm.calculate_initial_status(
+            publish_now=publish_now,
+            has_operations=True,
+            is_planned=operation_orm.is_planned
+        )
+        report_orm.status = report_initial_status
 
-        with transaction.atomic():
-            report_orm.save()
-
-    def create_operation(operation_data, start_now : Bool):
-        # retrieve start now flag
-        start_now = operation_data.get("start_now") or None
-        # turns the dict into an ORM
-        operation_orm = cls.get_operation_ORM(operation_data)
-        # normalization/validation
-        cls.validate_operation(operation_orm)
-        # create_operation
-        # add transaction.atomic()
+        # create
+        report_orm.save()
         operation_orm.save()
