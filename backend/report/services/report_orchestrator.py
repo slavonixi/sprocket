@@ -265,7 +265,7 @@ class ReportOrchestrator:
             )
 
         # check permissions and get normalized operation dict
-        operation_data = cls.get_validated_operation_data(user, operation_data)
+        operation_data = cls.get_validated_operation_data(user, operation_data, is_planning)
 
         # crete report + operation domain logic
         ReportServices.new_report_with_operation(report_data, operation_data)
