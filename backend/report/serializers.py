@@ -214,7 +214,7 @@ class ReportAndOperationCreateSerializer(serializers.ModelSerializer):
 
     # Relazioni e flag di controllo
     operation = OperationSerializer(many=True, required=False)
-    publish_immediately = serializers.BooleanField(write_only=True, required=False, default=False)
+    publish_now = serializers.BooleanField(write_only=True, required=False, default=False)
 
     class Meta:
         model = Report
@@ -239,7 +239,7 @@ class ReportAndOperationCreateSerializer(serializers.ModelSerializer):
             'date_closed',
             'created_by',
             'synced_at',
-            'publish_immediately',
+            'publish_now',
             # operations serializer
             'operation',
         ]
