@@ -73,37 +73,46 @@ class Report(models.Model):
         ]
 
         permissions = [
-            ("can_draft_report", _("Can draft reports")),
+            ("can_override_report", _("Can override reports")),
+            ("can_plan_report", _("Can plan reports")),
+            ("can_start_report", _("Can start reports")),
         ]
 
     #############################
     #   REPORT LOGIC METHODS    #
     #############################
 
-
-    def set_initial_status(self, operations : Boolean, publish_now : Boolean):
-        """
-            Set the status of the report taking into account:
-                - if there are operations linked to it
-                - if the report has to be published now or not
-        """
-        if self.status:
-            # if the status was already set by a supervisor
-            # let it be
+    @property
+    def is_open_for_operations():
+        if self.status not in [
+            self.ReportStatus.COMPLETED,
+            self.ReportStatus.CLOSED,
+            self.ReportStatus.CANCELLED
+        ]:
+            return True
+        else:
             return False
 
-        if publish_now:
-            # Publish the report means that it IS NOT a 'DRAFT'
-            if operations:
-                # If there are operations the entire report is 'PLANNED'
-                report_orm.status = Report.ReportStatus.PLANNED
-            else:
-                # If there aren't, the report is simply 'OPEN'
-                report_orm.status = Report.ReportStatus.OPEN
+    def calculate_initial_status(self, *, publish_now=False, has_operations=False, is_planned=False):
+        calc_status = None
+        if self.status:
+            # if the status is already set, the user is a supervisor
+            return False
         else:
-            # Otherwise it is a 'DRAFT'
-            report_orm.status = Report.ReportStatus.DRAFT
+            # is the report being published?
+            if publish_now:
+                # if the report has to be published check if there are planned operations
+                if has_operations and is_planned:
+                    # if yes, the report is planned
+                    calc_status = self.ReportStatus.PLANNED
+                else:
+                    # otherwise the operations are drafts and the report is simply open
+                    calc_status = self.ReportStatus.OPEN
+            else:
+                # if the report is not being published, it is a DRAFT
+                calc_status = self.ReportStatus.DRAFT
 
+        return calc_status
 
 class Operation(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -151,19 +160,27 @@ class Operation(models.Model):
         ordering = ['scheduled_datetime']
 
         permissions = [
-            ("can_plan_operations", _("Can assign technician or create draft operations")),
-            ("can_run_operations", _("Can start an operation")),
+            ("can_override_operation", _("Can override an operation")),
+            ("can_plan_operation", _("Can plan an operation")),
+            ("can_start_operation", _("Can start an operation")),
         ]
 
     #############################
     #  OPERATION LOGIC METHODS  #
     #############################
 
-    def set_initial_status(self, start_now : Boolean):
-        if start_now:
-            self.status = self.OperationStatus.RUNNING
+    def calculate_initial_status(self, start_now : bool):
+        calc_status = None
+        if self.technician_fk:
+            if start_now:
+                calc_status = self.OperationStatus.RUNNING
+            else:
+                if scheduled_datetime:
+                    calc_status = self.OperationStatus.PLANNED
         else:
-            self.status = self.OperationStatus.PLANNED
+            calc_status = self.OperationStatus.DRAFT
+
+        return calc_status
 
 class UsedMaterials(models.Model):
 
