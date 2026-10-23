@@ -53,6 +53,7 @@ class HR_records(models.Model):
     associated_user = models.OneToOneField(
         settings.AUTH_USER_MODEL,
         on_delete=models.PROTECT,
+        related_name='hr_record',
     )
     def __str__(self):
         return f"{self.name} {self.surname}"
