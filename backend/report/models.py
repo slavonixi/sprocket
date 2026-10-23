@@ -8,10 +8,10 @@ from django.utils.translation import gettext_lazy as _
 #OTHER MODELS
 from inventory.models import Movement
 from inventory.models import Inventory
-from administration.models import HR_records
 from administration.models import (
     Customer_records,
     Machinery_records,
+    HR_records,
 )
 
 class Report(models.Model):
@@ -83,7 +83,7 @@ class Report(models.Model):
     #############################
 
     @property
-    def is_open_for_operations():
+    def is_open_for_operations(self):
         if self.status not in [
             self.ReportStatus.COMPLETED,
             self.ReportStatus.CLOSED,
@@ -97,7 +97,7 @@ class Report(models.Model):
         calc_status = None
         if self.status:
             # if the status is already set, the user is a supervisor
-            return False
+            return self.status
         else:
             # is the report being published?
             if publish_now:
@@ -121,7 +121,7 @@ class Operation(models.Model):
     report_fk = models.ForeignKey(Report, on_delete=models.CASCADE, related_name='operations')
 
     # Assegnazione Tecnici (Molti a Molti: un'operazione può essere fatta da più tecnici)
-    technicians = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='assigned_operations', blank=True)
+    technicians = models.ManyToManyField(HR_records, related_name='assigned_operations', blank=True)
 
     class OperationStatus(models.TextChoices):
         DRAFT = 'DRAFT', _('Draft')
@@ -153,6 +153,10 @@ class Operation(models.Model):
     def involved_materials_queryset(self):
         return Inventory.objects.filter(usedmaterials__operation_fk=self).distinct()
 
+    @property
+    def is_planned(self):
+        return self.status == self.OperationStatus.PLANNED
+
     def __str__(self):
         return self.desc
 
@@ -169,16 +173,17 @@ class Operation(models.Model):
     #  OPERATION LOGIC METHODS  #
     #############################
 
-    def calculate_initial_status(self, start_now : bool):
+    def calculate_initial_status(self, start_now : bool, has_technicians : bool):
         calc_status = None
-        if self.technician_fk:
-            if start_now:
+        if start_now:
+            if has_technicians:
                 calc_status = self.OperationStatus.RUNNING
-            else:
-                if scheduled_datetime:
-                    calc_status = self.OperationStatus.PLANNED
         else:
-            calc_status = self.OperationStatus.DRAFT
+            if has_technicians and self.scheduled_datetime:
+                calc_status = self.OperationStatus.PLANNED
+            else:
+                calc_status = self.OperationStatus.DRAFT
+
 
         return calc_status
 
