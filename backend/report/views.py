@@ -74,6 +74,8 @@ class ReportViewSet(viewsets.ModelViewSet):
         Provide Report information
     """
 
+    # Differenziare 2 endpoint per 'planning' e 'starting'
+
     def get_serializer_class(self):
         if self.action == 'create':
             # Giving the possibility to create the operation in the same moment
@@ -85,5 +87,29 @@ class ReportViewSet(viewsets.ModelViewSet):
     queryset = models.Report.objects.all()
     permission_classes = [permissions.IsAuthenticated]
 
-    def perform_create(self, serializer):
-        report_data = serializer.validated_data
+    @action(detail=False, methods=['post'])
+    def plan(self, request, pk=None):
+        """
+        Route: POST /api/operations/plan/
+        Crea una nuova operazione pianificata.
+        """
+        # serializer and field validation
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        validated_data = serializer.validated_data
+
+        if validated_data['operation']:
+
+        else:
+
+
+        return Response(
+            {"detail": "Operazione creata e pianificata con successo."},
+            status=status.HTTP_201_CREATED
+        )
+
+    def create(self, request, *args, **kwargs):
+        raise MethodNotAllowed(
+            method="POST",
+            detail="La creazione diretta non è consentita. Utilizza /operations/plan/ o /operations/start/."
+        )
