@@ -209,7 +209,7 @@ class ReportOrchestrator:
             # secure planning fields as scheduled_datetime
             operation_data['scheduled_datetime'] = None
             # retrieve technician profile if it isn't set
-            report_data.setdefault('technician_fk', user.hr_record)
+            report_data.setdefault('technicians', user.hr_record)
         else:
             raise BusinessLogicError(
                 _("You don't have the permission to start an operation")
