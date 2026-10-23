@@ -1,4 +1,6 @@
 from report import models
+from report import permissions
+from report.services.report_orchestrator import ReportOrchestrator
 from rest_framework import generics
 from django.contrib.auth.models import User
 from report.serializers import (
@@ -69,6 +71,67 @@ class OperationViewSet(viewsets.ModelViewSet):
     serializer_class = OperationSerializer
     permission_classes = [permissions.IsAuthenticated]
 
+    ########################################
+    ######      OPERATION PLAN        ######
+    ########################################
+
+    @action(
+          detail=False,
+          methods=['post'],
+          permission_classes=[permissions.CanPlanOperation]
+    )
+    def plan(self, request, pk=None):
+        """
+        Route: POST /api/v1/operation/plan/
+        Plan an operation
+        """
+        # serializer and field validation
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        validated_data = serializer.validated_data
+
+        ReportOrchestrator.add_operation(
+            request.user,
+            validated_data,
+            is_planning=True,
+        )
+
+        return Response
+            {"detail": _("operation created")},
+            status=status.HTTP_201_CREATED
+        )
+
+    ########################################
+    ######   OPERATION QUICKSTART     ######
+    ########################################
+
+    @action(
+          detail=False,
+          methods=['post'],
+          permission_classes=[permissions.CanStartOperation]
+    )
+    def quickstart(self, request, pk=None):
+        """
+        Route: POST /api/v1/operation/quickstart/
+        quickstart an operation
+        """
+        # serializer and field validation
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        validated_data = serializer.validated_data
+
+        ReportOrchestrator.add_operation(
+            request.user,
+            validated_data,
+            is_planning=False,
+        )
+
+        return Response
+            {"detail": _("operation has been created and started")},
+            status=status.HTTP_201_CREATED
+        )
+
+
 class ReportViewSet(viewsets.ModelViewSet):
     """
         Provide Report information
@@ -87,26 +150,82 @@ class ReportViewSet(viewsets.ModelViewSet):
     queryset = models.Report.objects.all()
     permission_classes = [permissions.IsAuthenticated]
 
-    @action(detail=False, methods=['post'])
+    ########################################
+    ######        REPORT PLAN         ######
+    ########################################
+
+    @action(
+          detail=False,
+          methods=['post'],
+          permission_classes=[permissions.CanPlanReport]
+    )
     def plan(self, request, pk=None):
         """
-        Route: POST /api/operations/plan/
-        Crea una nuova operazione pianificata.
+        Route: POST /api/v1/report/plan/
+        Plan a report
         """
         # serializer and field validation
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         validated_data = serializer.validated_data
 
-        if validated_data['operation']:
-
+        if validated_data.get('operation'):
+            # if operation is provided in the request
+            # create both contestually
+            ReportOrchestrator.create_report_and_operation(
+                request.user,
+                validated_data,
+                is_planning=True,
+            )
         else:
-
-
+            # otherwise create only the empty report
+            ReportOrchestrator.create_empty_report(
+                request.user,
+                validated_data
+            )
         return Response(
-            {"detail": "Operazione creata e pianificata con successo."},
+            {"detail": _("report created")},
             status=status.HTTP_201_CREATED
         )
+
+    ########################################
+    ######       REPORT START         ######
+    ########################################
+
+    @action(
+          detail=False,
+          methods=['post'],
+          permission_classes=[permissions.CanStartReport]
+    )
+    def quickstart(self, request, pk=None):
+        """
+        Route: POST /api/v1/report/quickstart/
+        quickstart a report
+        """
+        # serializer and field validation
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        validated_data = serializer.validated_data
+
+        if validated_data.get('operation'):
+            # operation must be included in the payload
+            # during a quickstart
+            ReportOrchestrator.create_report_and_operation(
+                request.user,
+                validated_data,
+                is_planning=False,
+            )
+        else:
+            return Response(
+                {"detail": "provide operation data in order to quickstart"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        return Response(
+            {"detail": "Report quickstart has been successful"},
+            status=status.HTTP_201_CREATED
+        )
+
 
     def create(self, request, *args, **kwargs):
         raise MethodNotAllowed(
